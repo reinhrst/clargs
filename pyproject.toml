@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argize"
+version = "0.0.1"
+description = "Easily generate commandline apps from your functions"
+authors = [
+  { name = "Claude", email = "pypi@claude.nl" },
+]
+license = { file = "LICENSE.txt" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"  # will probably work onm older pythons too
+
+[project.urls]
+"Homepage" = "https://github.com/reinhrst/argize"
+"Bug Tracker" = "https://github.com/reinhrst/argize/issues"
