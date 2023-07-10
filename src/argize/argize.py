@@ -159,8 +159,12 @@ class Argize:
         first_paragraph = \
             [*[p for p in docstring.split("\n\n") if p.strip()], ""][0]
 
+        prefix_chars = "".join(set(self.settings.flag_prefix + (
+            self.settings.short_flag_prefix
+            if self.settings.generate_short_flags else "")))
         parser = argparse.ArgumentParser(
             description=first_paragraph,
+            prefix_chars=prefix_chars,
         )
         self.add_to_parser(parser, func)
         return parser

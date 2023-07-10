@@ -119,7 +119,7 @@ class AapFromData(t.Generic[T]):
                 return True
             if self.settings.positional_and_kw_args_become == "flag":
                 return False
-            if self.param.default is not inspect.Parameter.empty:
+            if self.param.default is inspect.Parameter.empty:
                 return True
         return False
 
