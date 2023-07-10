@@ -33,7 +33,7 @@ class NOT_SET_TYPE:
 NOT_SET = NOT_SET_TYPE("not_set")
 UNSET = NOT_SET_TYPE("unset")
 
-T = t.TypeVar("T", bound=t.Type)
+T = t.TypeVar("T")
 RET = t.TypeVar("RET")
 
 
@@ -62,7 +62,7 @@ class AddArgumentParameters(t.Generic[T]):
     action: t.Literal[
         'store', 'store_const', 'store_true', 'store_false', 'append',
         'append_const', 'count', 'help', 'version'] | NOT_SET_TYPE = NOT_SET
-    choices: t.Container[T] | NOT_SET_TYPE = NOT_SET
+    choices: t.Container[str] | NOT_SET_TYPE = NOT_SET
     const: T | NOT_SET_TYPE = NOT_SET
     default: T | NOT_SET_TYPE = NOT_SET
     dest: str | NOT_SET_TYPE = NOT_SET
@@ -76,11 +76,11 @@ class AddArgumentParameters(t.Generic[T]):
         self,
         fields: dict | AddArgumentParameters[T]
     ) -> AddArgumentParameters[T]:
-        if isinstance(fields, AddArgumentParameters):
-            fields = fields.asdict(keep_unset=True)
+        fieldsdict = fields.asdict(keep_unset=True) \
+            if isinstance(fields, AddArgumentParameters) else fields
         return AddArgumentParameters(**{
             **self.asdict(keep_unset=True),
-            **fields,
+            **fieldsdict,
             }
         )
 
@@ -130,7 +130,8 @@ class Argize:
     ) -> None:
         parser.set_defaults(_argize_func_=func)
         signature = inspect.signature(func)
-        args_and_aap_s = [
+        args_and_aap_s: t.Sequence[
+            t.Tuple[t.Sequence[str], AddArgumentParameters]] = [
                 aap_from_data.AapFromData.from_param_and_settings(
                     param, self.settings).get_args_and_aap()
                 for param in signature.parameters.values()]
