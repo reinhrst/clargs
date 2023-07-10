@@ -48,6 +48,7 @@ class Settings:
     generate_short_flags: bool = True
     positional_and_kw_args_become: t.Literal[
         "positional", "flag_if_default", "flag"] = "positional"
+    replace_underscore_with_dash: bool = True
 
     def __post_init__(self):
         assert not (

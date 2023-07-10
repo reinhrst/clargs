@@ -573,3 +573,19 @@ class TestSettings(Base):
         args = parser.parse_args(["foo", "--bar", "bar"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "foo": "foo", "bar": "bar"})
+
+    def test_settings_no_dash_replacement(self):
+        def function(*, my_number: int):
+            return my_number
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["--my-number", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "my_number": 3})
+
+        argize_obj = argize.Argize(argize.Settings(
+            replace_underscore_with_dash=False))
+        parser = argize_obj.create_parser(function)
+        args = parser.parse_args(["--my_number", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "my_number": 3})

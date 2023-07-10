@@ -94,11 +94,13 @@ class AapFromData(t.Generic[T]):
 
     def get_all_param_names(self) -> t.Sequence[str]:
         has_custom_name = self.extra_info.name is not argize.NOT_SET
+        param_name_with_replacement = self.param.name.replace("_", "-") \
+            if self.settings.replace_underscore_with_dash else self.param.name
         param_name = t.cast(
             str,
             self.extra_info.name if has_custom_name else
             ("" if self.arg_type_is_positional() else self.settings.flag_prefix
-             ) + self.param.name.replace("_", "-"))
+             ) + param_name_with_replacement)
         all_param_names = [
                 param_name,
                 *(t.cast(list[str], self.extra_info.aliases or []))
