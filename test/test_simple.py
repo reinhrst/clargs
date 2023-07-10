@@ -1,9 +1,11 @@
-import argparse
 import argize
 import unittest
 import parameterized
 import pathlib
 import typing as t
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def str_func(foo: str):
@@ -98,8 +100,41 @@ class TestSimpleCases(unittest.TestCase):
 
 
 class TestBooleans(unittest.TestCase):
-    def test_boolean_flags_default_false(self):
-        def function(*, flag: bool = False):
+    def test_boolean(self):
+        def function(flag: bool):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["YES"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["NO"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": False})
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["maybe"])
+
+    def test_boolean_as_flag(self):
+        def function(*, flag: bool):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["--flag", "YES"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["-f", "YES"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["--flag", "NO"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": False})
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["--flag", "maybe"])
+
+
+class TestFlags(unittest.TestCase):
+    def test_flags_default_false(self):
+        def function(*, flag: argize.Flag = False):
             pass
 
         parser = argize.create_parser(function)
@@ -109,35 +144,59 @@ class TestBooleans(unittest.TestCase):
         args = parser.parse_args(["--flag"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "flag": True})
-
-    def test_boolean_flags_default_true(self):
-        def function(*, flag: bool = True):
-            pass
-
-        parser = argize.create_parser(function)
-        args = parser.parse_args([])
+        args = parser.parse_args(["-f"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "flag": True})
         args = parser.parse_args(["--no-flag"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "flag": False})
 
-    def test_boolean_flags_no_default(self):
-        def function(*, flag: bool):
+    def test_flags_default_true(self):
+        def function(*, flag: argize.Flag = True):
             pass
 
-        with self.assertRaisesRegexp(
-                argize.GetArgsFromTypeException,
-                "Boolean types always need a default value"):
-            argize.create_parser(function)
+        parser = argize.create_parser(function)
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["--flag"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["-f"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["--no-flag"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": False})
+        parser = argize.create_parser(function)
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
 
-    def test_boolean_positional(self):
-        def function(flag: bool = True):
+    def test_flags_no_default(self):
+        def function(*, flag: argize.Flag):
             pass
 
-        with self.assertRaisesRegexp(
-                argize.GetArgsFromTypeException,
-                "Boolean types can only be used in keyword-only arguments"):
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["--flag"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["-f"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": True})
+        args = parser.parse_args(["--no-flag"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": False})
+        parser = argize.create_parser(function)
+        with self.assertRaises(SystemExit):
+            args = parser.parse_args([])
+
+    def test_positional(self):
+        def function(flag: argize.Flag = True):
+            pass
+
+        with self.assertRaisesRegex(
+                argize.GetArgsFromTypeException, "Flag error"):
             argize.create_parser(function)
 
 
@@ -219,6 +278,38 @@ class TestList(unittest.TestCase):
         self.assertEqual(vars(args), {
             "_argize_func_": function, "numbers": []})
 
+    def test_list_int_literal(self):
+        def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["1", "2", "11"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "numbers": [1, 2, 11]})
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["4"])
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["1", "2", "4"])
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["1", "2", "4", "11"])
+
+    @unittest.expectedFailure  # Seems to be a bug in argparse....
+    def test_list_int_literal_empty_list(self):
+        def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
+            pass
+
+        parser = argize.create_parser(function)
+        parser.parse_args([])
+
+    def test_list_bool(self):
+        def function(bools: t.List[bool]):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["yes", "no", "true", "False"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "bools": [True, False, True, False]})
+
     def test_list_str_options(self):
         def function(*, numbers: t.List[int]):
             pass
@@ -236,7 +327,9 @@ class TestList(unittest.TestCase):
 
     def test_list_int_minimal_one(self):
         def function(
-                numbers: t.Annotated[t.List[int], argize.Params(nargs="+")]):
+                numbers: t.Annotated[t.List[int], argize.ExtraInfo(
+                    add_argument_parameters=argize.AddArgumentParameters(
+                        nargs="+"))]):
             pass
 
         parser = argize.create_parser(function)
@@ -245,3 +338,35 @@ class TestList(unittest.TestCase):
             "_argize_func_": function, "numbers": [1, 2]})
         with self.assertRaises(SystemExit):
             parser.parse_args([])
+
+
+class TestLiteral(unittest.TestCase):
+    def test_string_literal(self):
+        def function(foobar: t.Literal["foo", "bar", "baz"]):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["foo"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "foobar": "foo"})
+        args = parser.parse_args(["bar"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "foobar": "bar"})
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["foobar"])
+
+    def test_int_literal(self):
+        def function(prime: t.Literal[1, 2, 3, 5, 7, 11]):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["1"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "prime": 1})
+        args = parser.parse_args(["11"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "prime": 11})
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["4"])
+
+

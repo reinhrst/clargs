@@ -1,244 +1,208 @@
+from __future__ import annotations
 import argparse
 import inspect
 import pathlib
-import functools
-import types
-import typing as t
+import logging
 import dataclasses
+import typing as t
+from . import aap_from_data
+
+logger = logging.getLogger("argize")
 
 # simple types are those types that have a constructor taking a single str
 SIMPLE_TYPES = (str, int, float, pathlib.Path)
 
 
 class NOT_SET_TYPE:
-    singleton = None
+    def __init__(self, id):
+        self.id = id
 
-    def __new__(cls):
-        if cls.singleton is None:
-            cls.singleton = super().__new__(cls)
-        return cls.singleton
+    def __repr__(self):
+        return f"NOT_SET_TYPE({id})"
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, *args):
+        return self
 
     def __bool__(self):
         return False
 
 
-NOT_SET = NOT_SET_TYPE()
+NOT_SET = NOT_SET_TYPE("not_set")
+UNSET = NOT_SET_TYPE("unset")
 
 T = t.TypeVar("T", bound=t.Type)
+RET = t.TypeVar("RET")
 
 
-@dataclasses.dataclass(kw_only=True)
-class Params(t.Generic[T]):
-
-    action: NOT_SET_TYPE | t.Literal[
-        'store', 'store_const', 'store_true', 'append',
-        'append_const', 'count', 'help', 'version'] = NOT_SET
-    const: NOT_SET_TYPE | T = NOT_SET
-    choices: NOT_SET_TYPE | t.Container[T] = NOT_SET
-    default: NOT_SET_TYPE | T = NOT_SET
-    dest: NOT_SET_TYPE | str = NOT_SET
-    help: NOT_SET_TYPE | str = NOT_SET
-    nargs: NOT_SET_TYPE | int | t.Literal["?", "*", "+"] = NOT_SET
-    required: NOT_SET_TYPE | bool = NOT_SET
-    metavar: NOT_SET_TYPE | str = NOT_SET
-    type: NOT_SET_TYPE | t.Callable[[str], T] = NOT_SET
-    aliases: NOT_SET_TYPE | t.Sequence["str"] = NOT_SET
-
-    def combine_with(self, other: "Params[T]"):
-        return type(self)(**{
-            **{k: v for k, v in self.asdict().items() if v is not NOT_SET},
-            **{k: v for k, v in other.asdict().items() if v is not NOT_SET},
-        })
-
-    def asdict(self):
-        return dataclasses.asdict(self)
-
-    def add_to_parser(
-            self,
-            name: str,
-            positional: bool,
-            parser: argparse.ArgumentParser,
-            default: NOT_SET_TYPE | T,
-            typ: t.Type[T],
-    ):
-        name_as_param = name.replace("_", "-")
-        positional_args = (("" if positional else "--") + name_as_param,
-                           *(self.aliases or []))
-        kwargs = {k: v for k, v in self.asdict().items()
-                  if k != "aliases" and v is not NOT_SET}
-        if "type" not in kwargs:
-            if typ == bool:
-                positional_args, newkwargs = get_args_for_bool(
-                        name_as_param, positional, positional_args, default)
-                kwargs = {**newkwargs, **kwargs}
-            else:
-                kwargs = {**get_args_from_type_and_default(typ, default),
-                          **kwargs}
-        if "default" not in kwargs and default is not NOT_SET:
-            kwargs["default"] = default
-            kwargs["nargs"] = "?"
-
-        parser.add_argument(*positional_args, **kwargs)
-
-
-class GetArgsFromTypeException(Exception):
+class ExtraInfoException(Exception):
     pass
 
 
-def get_args_for_bool(
-    name_as_param: str,
-    positional: bool,
-    positional_args: list[str],
-    default: bool | NOT_SET_TYPE,
-) -> (list[str], dict):
-    if positional:
-        raise GetArgsFromTypeException(
-            f"{name_as_param}: Boolean types can only be used "
-            "in keyword-only arguments")
-    if default is False:
-        return (positional_args, {
-            "action": "store_const", "const": True, "default": False})
-    if default is True:
-        if not all(arg.startswith("--") for arg in positional_args):
-            raise GetArgsFromTypeException(
-                f"{name_as_param}: Boolean types with True as "
-                "default value cannot have aliases that start "
-                "with something else than `--`")
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Settings:
+    flag_prefix: str = "--"
+    short_flag_prefix: t.Optional[str] = "-"
+    generate_short_flags: bool = True
+    positional_and_kw_args_become: t.Literal[
+        "positional", "flag_if_default", "flag"] = "positional"
 
-        new_positional_args = [
-                f"--no-{arg[len('--'):]}" for arg in positional_args]
-        return (new_positional_args, {
-            "action": "store_const", "const": False, "default": True,
-            "dest": name_as_param})
-    raise GetArgsFromTypeException(
-        f"{name_as_param}: Boolean types always need a default value"
-        "in keyword-only arguments")
+    def __post_init__(self):
+        assert not (
+            self.short_flag_prefix is None
+            and self.generate_short_flags), (
+                "If generate_short_flags is True, short_flag_prefix "
+                "cannot be None")
 
 
-def handle_literal(typ: t.Type[T]):
-    args = t.get_args(typ)
-    if len(args) == 0:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Literal with no items is not supported")
-    for basetyp in SIMPLE_TYPES:
-        if all(isinstance(arg, basetyp) for arg in args):
-            return {"type": basetyp, "choices": args}
-    else:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "All items should be of the same empty type.")
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class AddArgumentParameters(t.Generic[T]):
+    action: t.Literal[
+        'store', 'store_const', 'store_true', 'store_false', 'append',
+        'append_const', 'count', 'help', 'version'] | NOT_SET_TYPE = NOT_SET
+    choices: t.Container[T] | NOT_SET_TYPE = NOT_SET
+    const: T | NOT_SET_TYPE = NOT_SET
+    default: T | NOT_SET_TYPE = NOT_SET
+    dest: str | NOT_SET_TYPE = NOT_SET
+    help: str | NOT_SET_TYPE = NOT_SET
+    metavar: str | NOT_SET_TYPE = NOT_SET
+    nargs: int | t.Literal["?", "*", "+"] | NOT_SET_TYPE = NOT_SET
+    required: bool | NOT_SET_TYPE = NOT_SET
+    type: t.Callable[[str], T] | NOT_SET_TYPE = NOT_SET
+
+    def with_fields(
+        self,
+        fields: dict | AddArgumentParameters[T]
+    ) -> AddArgumentParameters[T]:
+        if isinstance(fields, AddArgumentParameters):
+            fields = fields.asdict(keep_unset=True)
+        return AddArgumentParameters(**{
+            **self.asdict(keep_unset=True),
+            **fields,
+            }
+        )
+
+    def asdict(self, keep_unset=False):
+        return {k: v for k, v in dataclasses.asdict(self).items()
+                if v is not NOT_SET
+                and (keep_unset or v is not UNSET)
+                }
 
 
-def handle_union(typ: t.Type[T], default: T | NOT_SET):
-    args = list(t.get_args(typ))
-    if len(args) != 2 or type(None) not in args:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Unions not supported (unless Union with None.")
-    try:
-        args.remove(type(None))
-        return get_args_from_type_and_default(
-            args[0], default, simple=True)
-    except GetArgsFromTypeException:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Type within Optional must be simple type")
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ExtraInfo(t.Generic[T]):
+    add_argument_parameters: AddArgumentParameters[T] = \
+        dataclasses.field(default_factory=AddArgumentParameters)
+    name: str | NOT_SET_TYPE = NOT_SET
+    aliases: t.Sequence["str"] | NOT_SET_TYPE = NOT_SET
+    validate: t.Callable[[T], bool] | NOT_SET_TYPE = NOT_SET
+    mapping: t.Mapping[str, T] | NOT_SET_TYPE = NOT_SET
+
+    def __post_init__(self):
+        if self.mapping is not NOT_SET and self.add_argument_parameters.type:
+            raise ExtraInfoException(
+                    "You cannot set both mapping and type keys")
 
 
-def handle_list(typ: t.Type[T], default: T | NOT_SET):
-    args = t.get_args(typ)
-    assert len(args) == 1
-    try:
-        itemargs = get_args_from_type_and_default(
-            args[0], default, simple=True)
-    except GetArgsFromTypeException:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Type within List must be simple type.")
-    assert set(itemargs.keys()) - {"type", "choice"}  # TODO better error
-    return {
-        **itemargs,
-        "nargs": "*",
-    }
+class Argize:
+    settings: Settings
 
+    def __init__(self, settings: t.Optional[Settings] = None):
+        self.settings = settings or Settings()
 
-def issubclass_rugged(subcls, parentcls) -> bool:
-    try:
-        return issubclass(subcls, parentcls)
-    except TypeError:
-        return False
+    def create_parser(
+        self, func: t.Callable[..., RET]
+    ) -> argparse.ArgumentParser:
+        docstring = inspect.getdoc(func) or ""
+        first_paragraph = \
+            [*[p for p in docstring.split("\n\n") if p.strip()], ""][0]
 
+        parser = argparse.ArgumentParser(
+            description=first_paragraph,
+        )
+        self.add_to_parser(parser, func)
+        return parser
 
-def get_args_from_type_and_default(
-    typ: t.Type[T], default: T | NOT_SET, *,
-    simple: bool = False,
-) -> dict:
-    if issubclass_rugged(typ, bool):
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Bool is not allowed in this context.")
-    origin = t.get_origin(typ)
-    if origin == t.Literal:
-        return handle_literal(typ)
-    if issubclass_rugged(typ, SIMPLE_TYPES):
-        return {"type": typ}
-    if simple:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Expected simple type.")
+    def add_to_parser(
+        self, parser: argparse.ArgumentParser, func: t.Callable
+    ) -> None:
+        parser.set_defaults(_argize_func_=func)
+        signature = inspect.signature(func)
+        args_and_aap_s = [
+                aap_from_data.AapFromData.from_param_and_settings(
+                    param, self.settings).get_args_and_aap()
+                for param in signature.parameters.values()]
 
-    if origin == t.Union or origin == types.UnionType:  # noqa
-        return handle_union(typ, default)
-    if issubclass_rugged(origin, t.Sequence):
-        return handle_list(typ, default)
-    if origin:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "Complex types beyond Literal, Optional and List not supported.")
-    else:
-        raise GetArgsFromTypeException(
-            f"Problem generating parsing function for {typ}; "
-            "No code how how to deal with this type")
+        args_and_aap_s = Argize._filter_out_taken_names_from_auto_names(
+            args_and_aap_s)
+
+        for (args, aap), param in zip(
+                args_and_aap_s, signature.parameters.values()):
+            logger.debug("Adding %s", repr((args, aap.asdict())))
+            from . import helper_types
+            try:
+                parser.add_argument(*args, **aap.asdict())
+            except helper_types.BooleanOptionalActionException:
+                raise aap_from_data.GetArgsFromTypeException(
+                    param, "Flag error, are you trying to use Flag in a "
+                    "positional argument?")
+
+    @staticmethod
+    def _filter_out_taken_names_from_auto_names(args_and_aap_s):
+        taken_names = set(
+            name
+            for names, _ in args_and_aap_s
+            for name in names
+            if not isinstance(name, aap_from_data.AutoGeneratedShortName))
+
+        new_args_and_aap_s = []
+        for names, aap in args_and_aap_s:
+            new_names = []
+            for name in names:
+                if not isinstance(name, aap_from_data.AutoGeneratedShortName):
+                    new_names.append(name)
+                    continue
+                assert isinstance(name, aap_from_data.AutoGeneratedShortName)
+                str_name = str(name)
+                del name
+                if str_name in taken_names:
+                    pass
+                else:
+                    new_names.append(str_name)
+                    taken_names.add(str_name)
+            assert new_names
+            new_args_and_aap_s.append((new_names, aap))
+        return new_args_and_aap_s
+
+    @staticmethod
+    def run(args):
+        logger.debug("Received parsed args %s", args)
+        assert "_argize_func_" in args
+        return args._argize_func_(
+            **{k: v for k, v in vars(args).items() if k != "_argize_func_"})
+
+    def create_parser_and_run(
+        self,
+        func: t.Callable[..., RET],
+        args=None
+    ) -> RET:
+        parser = self.create_parser(func)
+        return Argize.run(parser.parse_args(args))
 
 
 def create_parser(func: t.Callable) -> argparse.ArgumentParser:
-    docstring = inspect.getdoc(func) or ""
-    first_paragraph = \
-        [*[p for p in docstring.split("\n\n") if p.strip()], ""][0]
-
-    parser = argparse.ArgumentParser(
-        description=first_paragraph,
-    )
-    add_to_parser(parser, func)
-    return parser
+    return Argize().create_parser(func)
 
 
 def add_to_parser(parser: argparse.ArgumentParser, func: t.Callable) -> None:
-    parser.set_defaults(_argize_func_=func)
-    signature = inspect.signature(func)
-    for param in signature.parameters.values():
-        typehint = str if param.annotation is inspect.Parameter.empty \
-            else param.annotation
-        default = NOT_SET if param.default is inspect.Parameter.empty \
-            else param.default
-        if param.kind not in (
-                inspect.Parameter.POSITIONAL_ONLY,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                inspect.Parameter.KEYWORD_ONLY):
-            raise GetArgsFromTypeException(
-                "variable-length-arguments (those starting with * and **) "
-                "are not (yet) supported")
-        positional = param.kind != inspect.Parameter.KEYWORD_ONLY
-        (typ, *metas) = t.get_args(typehint) \
-            if t.get_origin(typehint) == t.Annotated else (typehint, )
-        params = functools.reduce(
-            lambda a, b: a.combine_with(b) if isinstance(b, Params) else a,
-            reversed(metas), Params(), )
-        params.add_to_parser(param.name, positional, parser, default, typ)
+    return Argize().add_to_parser(parser, func)
 
 
 def run(args):
-    assert "_argize_func_" in args
-    return args._argize_func_(
-            **{k: v for k, v in vars(args).items() if k != "_argize_func_"})
+    return Argize.run(args)
+
+
+def create_parser_and_run(func: t.Callable[..., RET], args=None) -> RET:
+    return Argize().create_parser_and_run(func, args)
