@@ -6,6 +6,7 @@ from .argize import (
     AddArgumentParameters,
     create_parser,
     add_to_parser,
+    add_subparser,
     create_parser_and_run,
     run,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "AddArgumentParameters",
     "create_parser",
     "add_to_parser",
+    "add_subparser",
     "create_parser_and_run",
     "run",
     "Flag",

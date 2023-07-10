@@ -88,6 +88,19 @@ class TestSimpleCases(Base):
                 with self.assertExit(msg=expected_error):
                     parser.parse_args(input)
 
+    def test_negative_float_without_e(self):
+        parser = argize.create_parser(float_func)
+        args = parser.parse_args(["-3.14"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": float_func, "pi": -3.14})
+
+    @unittest.expectedFailure  # seems to be an issue in argparse
+    def test_negative_float_with_e(self):
+        parser = argize.create_parser(float_func)
+        args = parser.parse_args(["-314e-2"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": float_func, "pi": -3.14})
+
     def test_default_value(self):
         def function(foo: str = "bar"):
             pass
@@ -589,3 +602,47 @@ class TestSettings(Base):
         args = parser.parse_args(["--my_number", "3"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "my_number": 3})
+
+
+class TestSubParsers(Base):
+    def test_two_groups(self):
+        import argparse
+
+        def do_sum(terms: list[int]) -> int:
+            return sum(terms)
+
+        def do_product(factors: list[float]) -> float:
+            import math
+            return math.prod(factors)
+
+        parser = argparse.ArgumentParser()
+        subparsers = parser.add_subparsers(required=True)
+        argize.add_subparser(subparsers, do_sum)
+        argize.add_subparser(subparsers, do_product)
+
+        args = parser.parse_args(["do-sum", "2", "56", "-4"])
+        self.assertEqual(argize.run(args), 54)
+
+        args = parser.parse_args(["do-product", "2", "3.1415", "-1.3"])
+        self.assertEqual(argize.run(args), 2 * 3.1415 * -1.3)
+
+
+class TestFlagShortening(Base):
+    def test_multiple_flags_with_same_start_letter(self):
+        def function(*, flag1: int = 1, flag2: int = 2):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["-f", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag1": 3, "flag2": 2})
+
+    def test_multiple_flags_with_shortcode_overridden_later(self):
+        def function(*, flag1: int = 1, flag2: t.Annotated[
+                int, argize.extra_info(aliases=["-f"])] = 2):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["-f", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag1": 1, "flag2": 3})

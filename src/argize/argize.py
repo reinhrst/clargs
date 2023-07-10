@@ -106,6 +106,9 @@ class ExtraInfo(t.Generic[T]):
         if self.mapping is not NOT_SET and self.add_argument_parameters.type:
             raise ExtraInfoException(
                     "You cannot set both mapping and type keys")
+        if isinstance(self.aliases, str):
+            raise ExtraInfoException(
+                    "aliases must be list, not string (did you forget `[]`?)")
 
 
 def extra_info(
@@ -195,6 +198,16 @@ class Argize:
                     param, "Flag error, are you trying to use Flag in a "
                     "positional argument?")
 
+    def add_subparser(self, subparsers, func: t.Callable):
+        docstring = inspect.getdoc(func) or ""
+        first_paragraph = \
+            [*[p for p in docstring.split("\n\n") if p.strip()], ""][0]
+        func_name_with_replacement = func.__name__.replace("_", "-") \
+            if self.settings.replace_underscore_with_dash else func.__name__
+        subparser = subparsers.add_parser(
+            func_name_with_replacement, help=first_paragraph)
+        self.add_to_parser(subparser, func)
+
     @staticmethod
     def _filter_out_taken_names_from_auto_names(args_and_aap_s):
         taken_names = set(
@@ -244,6 +257,10 @@ def create_parser(func: t.Callable) -> argparse.ArgumentParser:
 
 def add_to_parser(parser: argparse.ArgumentParser, func: t.Callable) -> None:
     return Argize().add_to_parser(parser, func)
+
+
+def add_subparser(subparsers, func: t.Callable) -> None:
+    return Argize().add_subparser(subparsers, func)
 
 
 def run(args):
