@@ -1,6 +1,7 @@
 from .argize import (
     Argize,
     ExtraInfo,
+    extra_info,
     AddArgumentParameters,
     create_parser,
     add_to_parser,
@@ -20,6 +21,7 @@ from .aap_from_data import (
 __all__ = [
     "Argize",
     "ExtraInfo",
+    "extra_info",
     "AddArgumentParameters",
     "create_parser",
     "add_to_parser",

@@ -61,7 +61,8 @@ class Settings:
 class AddArgumentParameters(t.Generic[T]):
     action: t.Literal[
         'store', 'store_const', 'store_true', 'store_false', 'append',
-        'append_const', 'count', 'help', 'version'] | NOT_SET_TYPE = NOT_SET
+        'append_const', 'count', 'help',
+        'version'] | t.Callable | NOT_SET_TYPE = NOT_SET
     choices: t.Container[str] | NOT_SET_TYPE = NOT_SET
     const: T | NOT_SET_TYPE = NOT_SET
     default: T | NOT_SET_TYPE = NOT_SET
@@ -104,6 +105,45 @@ class ExtraInfo(t.Generic[T]):
         if self.mapping is not NOT_SET and self.add_argument_parameters.type:
             raise ExtraInfoException(
                     "You cannot set both mapping and type keys")
+
+
+def extra_info(
+    *,
+    name: str | NOT_SET_TYPE = NOT_SET,
+    aliases: t.Sequence["str"] | NOT_SET_TYPE = NOT_SET,
+    validate: t.Callable[[T], bool] | NOT_SET_TYPE = NOT_SET,
+    mapping: t.Mapping[str, T] | NOT_SET_TYPE = NOT_SET,
+    action: t.Literal[
+        'store', 'store_const', 'store_true', 'store_false', 'append',
+        'append_const', 'count', 'help',
+        'version'] | t.Callable | NOT_SET_TYPE = NOT_SET,
+    choices: t.Container[str] | NOT_SET_TYPE = NOT_SET,
+    const: T | NOT_SET_TYPE = NOT_SET,
+    default: T | NOT_SET_TYPE = NOT_SET,
+    dest: str | NOT_SET_TYPE = NOT_SET,
+    help: str | NOT_SET_TYPE = NOT_SET,
+    metavar: str | NOT_SET_TYPE = NOT_SET,
+    nargs: int | t.Literal["?", "*", "+"] | NOT_SET_TYPE = NOT_SET,
+    required: bool | NOT_SET_TYPE = NOT_SET,
+    type: t.Callable[[str], T] | NOT_SET_TYPE = NOT_SET,
+) -> ExtraInfo:
+    return ExtraInfo(
+        name=name,
+        aliases=aliases,
+        validate=validate,
+        mapping=mapping,
+        add_argument_parameters=AddArgumentParameters(
+            action=action,
+            choices=choices,
+            const=const,
+            default=default,
+            dest=dest,
+            help=help,
+            metavar=metavar,
+            nargs=nargs,
+            required=required,
+            type=type,
+        ))
 
 
 class Argize:

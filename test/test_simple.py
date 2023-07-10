@@ -1,6 +1,5 @@
 import argize
 import unittest
-import parameterized
 import pathlib
 import typing as t
 import logging
@@ -34,32 +33,39 @@ def path_func(etc: pathlib.Path):
 
 
 class TestSimpleCases(unittest.TestCase):
-    @parameterized.parameterized.expand([
-        ("str", ["foo"], {"foo": "foo"}),
-        ("int", ["1"], {"one": 1}),
-        ("float", ["3.14"], {"pi": 3.14}),
-        ("float", ["314e-2"], {"pi": 3.14}),
-        ("no_annotation", ["foo"], {"foo": "foo"}),
-        ("path", ["/etc"], {"etc": pathlib.Path("/etc")}),
-        ])
-    def test_simple(self, prefix, input, result):
-        function = globals().get(f"{prefix}_func")
-        parser = argize.create_parser(function)
-        args = parser.parse_args(input)
-        self.assertEqual(vars(args), {"_argize_func_": function, **result})
-        self.assertEqual(argize.run(args), "SUCCESS")
+    def test_simple(self):
+        PARAMETERS = [
+            (str_func, ["foo"], {"foo": "foo"}),
+            (int_func, ["1"], {"one": 1}),
+            (float_func, ["3.14"], {"pi": 3.14}),
+            (float_func, ["314e-2"], {"pi": 3.14}),
+            (path_func, ["/etc"], {"etc": pathlib.Path("/etc")}),
+            (no_annotation_func, ["foo"], {"foo": "foo"}),
+        ]
 
-    @parameterized.parameterized.expand([
-        ("str", [], {"foo": "foo"}),
-        ("int", ["a"], {"one": 1}),
-        ("no_annotation", [], {"foo": "foo"}),
-        ("path", [], {"etc": pathlib.Path("/etc")}),
-        ])
-    def test_fail(self, prefix, input, result):
-        function = globals().get(f"{prefix}_func")
-        parser = argize.create_parser(function)
-        with self.assertRaises(SystemExit):
-            parser.parse_args(input)
+        for param in PARAMETERS:
+            with self.subTest(param=param):
+                print(param)
+                (function, input, result) = param
+                parser = argize.create_parser(function)
+                args = parser.parse_args(input)
+                self.assertEqual(
+                    vars(args), {"_argize_func_": function, **result})
+                self.assertEqual(argize.run(args), "SUCCESS")
+
+    def test_fail(self):
+        PARAMETERS = [
+            (str_func, [], {"foo": "foo"}),
+            (int_func, ["a"], {"one": 1}),
+            (no_annotation_func, [], {"foo": "foo"}),
+            (path_func, [], {"etc": pathlib.Path("/etc")}),
+        ]
+        for param in PARAMETERS:
+            with self.subTest(param=param):
+                (function, input, result) = param
+                parser = argize.create_parser(function)
+                with self.assertRaises(SystemExit):
+                    parser.parse_args(input)
 
     def test_default_value(self):
         def function(foo: str = "bar"):
@@ -97,6 +103,18 @@ class TestSimpleCases(unittest.TestCase):
         args = parser.parse_args(["foo", "--one", "3"])
         self.assertEqual(vars(args), {
             "_argize_func_": function, "foo": "foo", "one": 3})
+
+    def test_param_name_with_dash(self):
+        def function(*, my_number: int):
+            return my_number
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["--my-number", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "my_number": 3})
+        self.assertEqual(argize.run(args), 3)
+        with self.assertRaises(SystemExit):
+            args = parser.parse_args(["--my_number", "3"])
 
 
 class TestBooleans(unittest.TestCase):
@@ -293,13 +311,15 @@ class TestList(unittest.TestCase):
         with self.assertRaises(SystemExit):
             parser.parse_args(["1", "2", "4", "11"])
 
-    @unittest.expectedFailure  # Seems to be a bug in argparse....
+    @unittest.expectedFailure  # seems to be an issue in argparse
     def test_list_int_literal_empty_list(self):
         def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
             pass
 
         parser = argize.create_parser(function)
-        parser.parse_args([])
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "numbers": []})
 
     def test_list_bool(self):
         def function(bools: t.List[bool]):
@@ -327,9 +347,8 @@ class TestList(unittest.TestCase):
 
     def test_list_int_minimal_one(self):
         def function(
-                numbers: t.Annotated[t.List[int], argize.ExtraInfo(
-                    add_argument_parameters=argize.AddArgumentParameters(
-                        nargs="+"))]):
+                numbers: t.Annotated[
+                    t.List[int], argize.extra_info(nargs="+")]):
             pass
 
         parser = argize.create_parser(function)
@@ -370,3 +389,48 @@ class TestLiteral(unittest.TestCase):
             parser.parse_args(["4"])
 
 
+class TestCount(unittest.TestCase):
+    def test_count(self):
+        def function(*, flag: argize.Count):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["-f"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 1})
+        args = parser.parse_args(["-f"] * 5)
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 5})
+
+    def test_count_zero(self):
+        def function(*, flag: argize.Count):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 0})
+
+    # default gets overwritten (I mean, why would you want this anyways)
+    @unittest.expectedFailure
+    def test_count_other_default(self):
+        def function(*, flag: argize.Count = 3):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 3})
+        args = parser.parse_args(["--flag"] * 3)
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 6})
+
+    def test_count_positional(self):
+        # Not really sure this makes sense, but it's how it works
+        def function(flag: argize.Count):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args([])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "flag": 1})

@@ -18,15 +18,17 @@ def BooleanOptionalActionWitoutImplicitDefault(option_strings, dest, **kwargs):
 
 Flag = t.Annotated[
         bool,
-        argize.ExtraInfo(add_argument_parameters=argize.AddArgumentParameters(
+        argize.extra_info(
             type=argize.UNSET,
             nargs=argize.UNSET,
             action=BooleanOptionalActionWitoutImplicitDefault,
-        ))]
+        )]
 
 Count = t.Annotated[
         int,
-        argize.ExtraInfo(add_argument_parameters=argize.AddArgumentParameters(
+        argize.extra_info(
+            type=argize.UNSET,
+            nargs=argize.UNSET,
             action="count",
             default=0,
-        ))]
+        )]
