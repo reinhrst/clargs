@@ -6,6 +6,7 @@ import logging
 import dataclasses
 import typing as t
 from . import aap_from_data
+from . import docsparser
 
 logger = logging.getLogger("argize")
 
@@ -178,10 +179,16 @@ class Argize:
     ) -> None:
         parser.set_defaults(_argize_func_=func)
         signature = inspect.signature(func)
+        docstring = inspect.getdoc(func) or ""
+        paramdescriptions = {
+            p.name: p.description
+            for p in docsparser.get_parameter_info_from_docstring(docstring)}
         args_and_aap_s: t.Sequence[
             t.Tuple[t.Sequence[str], AddArgumentParameters]] = [
                 aap_from_data.AapFromData.from_param_and_settings(
-                    param, self.settings).get_args_and_aap()
+                    param,
+                    paramdescriptions.get(param.name, None),
+                    self.settings).get_args_and_aap()
                 for param in signature.parameters.values()]
 
         args_and_aap_s = Argize._filter_out_taken_names_from_auto_names(

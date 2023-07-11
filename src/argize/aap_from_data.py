@@ -49,11 +49,13 @@ class AapFromData(t.Generic[T]):
     param: inspect.Parameter
     settings: argize.Settings
     extra_info: argize.ExtraInfo
+    docstring_description: t.Optional[str]
 
     @classmethod
     def from_param_and_settings(
         cls,
         param: inspect.Parameter,
+        docstring_description: t.Optional[str],
         settings: argize.Settings,
     ) -> AapFromData[T]:
         if param.kind not in (
@@ -85,6 +87,7 @@ class AapFromData(t.Generic[T]):
         return cls(
             typ=typ,
             param=param,
+            docstring_description=docstring_description,
             settings=settings,
             extra_info=extra_info,
         )
@@ -206,6 +209,9 @@ class AapFromData(t.Generic[T]):
         if not aap:
             raise GetArgsFromTypeException(
                     self.param, "Cannot find a rule for this type.")
+        if self.docstring_description is not None:
+            aap = aap.with_fields({
+                "help": self.docstring_description})
         if self.has_default():
             aap = aap.with_fields({
                 "default": self.param.default,
