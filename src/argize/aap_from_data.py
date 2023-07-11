@@ -70,7 +70,18 @@ class AapFromData(t.Generic[T]):
         typehint = str if param.annotation is inspect.Parameter.empty \
             else param.annotation
         (typ, *metadatas) = t.get_args(typehint) \
-            if t.get_origin(typehint) == t.Annotated else (typehint, )
+            if t.get_origin(typehint) == t.Annotated else (typehint, [])
+
+        if (t.get_origin(typ) == t.Union or t.get_origin(typ) == types.UnionType):  # noqa
+            # check for Optional[]; if so, remove
+            args = list(t.get_args(typ))
+            if len(args) == 2 and type(None) in args:
+                typehint = args[0] if args[1] is type(None) else args[1]  # noqa
+                (typ, *extra_metadatas) = t.get_args(typehint) \
+                    if t.get_origin(typehint) == t.Annotated \
+                    else (typehint, [])
+                metadatas = [*metadatas, extra_metadatas]
+
         extra_infos = [
             *(md for md in metadatas if isinstance(md, argize.ExtraInfo)),
         ]
@@ -78,11 +89,6 @@ class AapFromData(t.Generic[T]):
             raise GetArgsFromTypeException(
                 param, "Can only have one ExtraInfo")
         extra_info = extra_infos[0] if extra_infos else argize.ExtraInfo()
-        if (t.get_origin(typ) == t.Union or t.get_origin(typ) == types.UnionType):  # noqa
-            # check for Optional[]; if so, remove
-            args = list(t.get_args(typ))
-            if len(args) == 2 and type(None) in args:
-                typ = args[0] if args[1] is type(None) else args[1]  # noqa
 
         return cls(
             typ=typ,
