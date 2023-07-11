@@ -1,3 +1,24 @@
+"""
+Examples:
+
+>>> python examples/2_show_defaults.py --help # Notice the (default: 10) parts (returncode: 0)
+usage: 2_show_defaults.py [-h] [--shout | --no-shout | -s]
+                          singular plural [maxitems]
+
+Counts from 1 to given number (default = 10)
+
+positional arguments:
+  singular              The singular form of the thing to count
+  plural                The plural form of the thing to count
+  maxitems              The number to count to (default: 10)
+
+options:
+  -h, --help            show this help message and exit
+  --shout, --no-shout, -s
+                        If True, will convert all expressions to capitals
+                        (default: False)
+
+"""
 import argparse
 import argize
 
