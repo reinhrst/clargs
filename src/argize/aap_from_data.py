@@ -80,7 +80,7 @@ class AapFromData(t.Generic[T]):
                 (typ, *extra_metadatas) = t.get_args(typehint) \
                     if t.get_origin(typehint) == t.Annotated \
                     else (typehint, [])
-                metadatas = [*metadatas, extra_metadatas]
+                metadatas = [*metadatas, *extra_metadatas]
 
         extra_infos = [
             *(md for md in metadatas if isinstance(md, argize.ExtraInfo)),
