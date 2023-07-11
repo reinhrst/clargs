@@ -14,6 +14,7 @@ from .argize import (
 from .helper_types import (
     Flag,
     Count,
+    ListOfAtLeastOne,
 )
 
 from .aap_from_data import (
@@ -33,5 +34,6 @@ __all__ = [
     "run",
     "Flag",
     "Count",
+    "ListOfAtLeatOne",
     "GetArgsFromTypeException"
 ]

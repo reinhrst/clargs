@@ -32,3 +32,6 @@ Count = t.Annotated[
             action="count",
             default=0,
         )]
+
+T = t.TypeVar("T", bound=t.Type)
+ListOfAtLeastOne = t.Annotated[list[T], argize.extra_info(nargs="+")]

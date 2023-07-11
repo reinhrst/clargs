@@ -604,6 +604,25 @@ class TestSettings(Base):
             "_argize_func_": function, "my_number": 3})
 
 
+class TestListOfOne(Base):
+    def test_list(self):
+        def function(foo: argize.ListOfAtLeastOne[float]):
+            pass
+
+        parser = argize.create_parser(function)
+        args = parser.parse_args(["2.5", "3"])
+        self.assertEqual(vars(args), {
+            "_argize_func_": function, "foo": [2.5, 3]})
+
+    def test_list_with_zero_items(self):
+        def function(foo: argize.ListOfAtLeastOne[float]):
+            pass
+
+        parser = argize.create_parser(function)
+        with self.assertExit(msg="the following arguments are required: foo"):
+            parser.parse_args([])
+
+
 class TestSubParsers(Base):
     def test_two_groups(self):
         import argparse
