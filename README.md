@@ -12,11 +12,14 @@ The goal of the `argize` package is to create commandline interfaces from functi
 - Type of a parameter is set through [PEP 484][2]-style type hints
 - Defaults are taken from the function signature
 - Based on the built-in `argparse` module
+- Function documentation creates command line arguments documentation
 
 
 ## Example
+Check out the [list of examples][3] to see the package in action
 
-Quick example ([see here for more examples][3]) (it just works out of the box!):
+
+A quick example (just to get you excited):
 ```python
 import argize
 
@@ -28,12 +31,22 @@ def count(
     *,
     shout: bool = False,
 ):
-    """Counts from 1 to given number (default = 10)"""
+    """
+    Counts from 1 to given number (default = 10)
+
+    This text should not appear
+
+    @param singular: The singular form of the thing to count
+    @param plural: The plural form of the thing to count
+    @param maxitems: The number to count to
+    @param shout: If True, will convert all expressions to capitals
+    """
     for i in range(maxitems):
         text = f"{i + 1} {singular if i == 0 else plural}"
         if shout:
             text = text.upper()
         print(text)
+
 
 if __name__ == "__main__":
     argize.create_parser_and_run(count)
@@ -46,15 +59,14 @@ usage: main.py [-h] [--shout [SHOUT]] singular plural [maxitems]
 Counts from 1 to given number (default = 10)
 
 positional arguments:
-  singular
-  plural
-  maxitems
+  singular              The singular form of the thing to count
+  plural                The plural form of the thing to count
+  maxitems              The number to count to
 
 options:
   -h, --help            show this help message and exit
   --shout [SHOUT], -s [SHOUT]
-
-> python main.py bottle bottles
+                        If True, will convert all expressions to capitals> python main.py bottle bottles
 1 bottle
 2 bottles
 3 bottles
@@ -122,7 +134,19 @@ I hope to add types quickly in future versions.
 
 In the meantime, any type not listed here will also work as long as an explicit conversion function is defined.
 
+## Subparsers
+
+Using subparsers it's possible to add multiple functions to your cli. See [an example here][5]
+
+
+## Compare to other solutions
+
+`argize` is far from the first solutions. Before development I looked at some of the alternatives out there, and found them
+- [`clize`][4] is an amazing product, however it's just getting started with PEP 484 typing support (and made some decisions in the past to use the type hints for other things, which feel limits flexibility now).
+- [TODO]
 
 [1]: https://docs.python.org/3/library/typing.html#typing.Annotated
 [2]: https://peps.python.org/pep-0484/
 [3]: examples/
+[4]: https://github.com/epsy/clize
+[5]: examples/4_parse_groups.py
