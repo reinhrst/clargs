@@ -139,7 +139,7 @@ class TestSimpleCases(Base):
             "_argize_func_": function, "foo": "foo", "one": 3})
 
     def test_param_name_with_dash(self):
-        def function(*, my_number: int):
+        def function(*, my_number: int = 2):
             return my_number
 
         parser = argize.create_parser(function)
@@ -182,6 +182,14 @@ class TestBooleans(Base):
             "_argize_func_": function, "flag": False})
         with self.assertExit(msg="invalid parse_bool value: 'maybe'"):
             parser.parse_args(["--flag", "maybe"])
+
+    def test_boolean_as_flag_without_value(self):
+        def function(*, flag: bool):
+            pass
+
+        parser = argize.create_parser(function)
+        with self.assertExit(msg="expected one argument"):
+            parser.parse_args(["--flag"])
 
 
 class TestFlags(Base):
@@ -467,19 +475,18 @@ class TestCount(Base):
             "_argize_func_": function, "flag": 6})
 
     def test_count_positional(self):
-        # Not really sure this makes sense, but it's how it works
         def function(flag: argize.Count):
             pass
 
-        parser = argize.create_parser(function)
-        args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_argize_func_": function, "flag": 1})
+        with self.assertRaisesRegex(
+                TypeError,
+                "'required' is an invalid argument for positionals"):
+            argize.create_parser(function)
 
 
 class TestSettings(Base):
     def test_generate_short_flags(self):
-        def function(*, flag: bool):
+        def function(*, flag: bool = False):
             pass
 
         parser = argize.create_parser(function)
@@ -494,7 +501,7 @@ class TestSettings(Base):
             parser.parse_args(["-f", "yes"])
 
     def test_generate_alternate_flags(self):
-        def function(*, flag: bool):
+        def function(*, flag: bool = False):
             pass
 
         parser = argize.create_parser(function)
@@ -523,7 +530,7 @@ class TestSettings(Base):
             "_argize_func_": function, "flag": True})
 
     def test_generate_windows_flags(self):
-        def function(*, flag: bool):
+        def function(*, flag: bool = False):
             pass
 
         parser = argize.create_parser(function)

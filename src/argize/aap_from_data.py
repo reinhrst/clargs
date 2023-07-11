@@ -221,8 +221,16 @@ class AapFromData(t.Generic[T]):
         if self.has_default():
             aap = aap.with_fields({
                 "default": self.param.default,
-                "nargs": "?",
                 })
+
+            if self.arg_type_is_flag() and not aap.action:
+                aap = aap.with_fields({"required": False})
+            else:
+                aap = aap.with_fields({"nargs": "?"})
+        else:
+            if self.arg_type_is_flag() and not aap.action \
+                    and aap.nargs not in ["*", "?"]:
+                aap = aap.with_fields({"required": True})
 
         # overwrite any explicitly set data
         aap = aap.with_fields(self.extra_info.add_argument_parameters)

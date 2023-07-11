@@ -31,6 +31,7 @@ Count = t.Annotated[
             nargs=argize.UNSET,
             action="count",
             default=0,
+            required=False,
         )]
 
 T = t.TypeVar("T", bound=t.Type)
