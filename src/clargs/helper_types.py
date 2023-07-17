@@ -12,27 +12,30 @@ def BooleanOptionalActionWitoutImplicitDefault(option_strings, dest, **kwargs):
         kwargs["required"] = True
     if not option_strings:
         raise BooleanOptionalActionException(
-            "Flag error, trying to add the flag to a positional parameter?")
+            "Flag error, trying to add the flag to a positional parameter?"
+        )
     return argparse.BooleanOptionalAction(option_strings, dest, **kwargs)
 
 
 Flag = t.Annotated[
-        bool,
-        clargs.extra_info(
-            type=clargs.UNSET,
-            nargs=clargs.UNSET,
-            action=BooleanOptionalActionWitoutImplicitDefault,
-        )]
+    bool,
+    clargs.extra_info(
+        type=clargs.UNSET,
+        nargs=clargs.UNSET,
+        action=BooleanOptionalActionWitoutImplicitDefault,
+    ),
+]
 
 Count = t.Annotated[
-        int,
-        clargs.extra_info(
-            type=clargs.UNSET,
-            nargs=clargs.UNSET,
-            action="count",
-            default=0,
-            required=False,
-        )]
+    int,
+    clargs.extra_info(
+        type=clargs.UNSET,
+        nargs=clargs.UNSET,
+        action="count",
+        default=0,
+        required=False,
+    ),
+]
 
-T = t.TypeVar("T", bound=t.Type)
+T = t.TypeVar("T")
 ListOfAtLeastOne = t.Annotated[list[T], clargs.extra_info(nargs="+")]

@@ -17,9 +17,7 @@ from .helper_types import (
     ListOfAtLeastOne,
 )
 
-from .aap_from_data import (
-    GetArgsFromTypeException
-)
+from .aap_from_data import GetArgsFromTypeException
 
 __all__ = [
     "Clargs",
@@ -35,5 +33,5 @@ __all__ = [
     "Flag",
     "Count",
     "ListOfAtLeatOne",
-    "GetArgsFromTypeException"
+    "GetArgsFromTypeException",
 ]

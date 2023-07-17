@@ -39,10 +39,9 @@ def setUpModule():
 
 class Base(unittest.TestCase):
     @contextlib.contextmanager
-    def assertExit(self, *, msg: str = None, regex: str | t.Pattern = None):
+    def assertExit(self, *, msg: t.Optional[str] = None, regex: t.Optional[str] = None):
         capture = io.StringIO()
-        with self.assertRaises(SystemExit), \
-                contextlib.redirect_stderr(capture):
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(capture):
             yield
         capturestr = capture.getvalue()
         del capture
@@ -69,16 +68,14 @@ class TestSimpleCases(Base):
                 (function, input, result) = param
                 parser = clargs.create_parser(function)
                 args = parser.parse_args(input)
-                self.assertEqual(
-                    vars(args), {"_clargs_func_": function, **result})
+                self.assertEqual(vars(args), {"_clargs_func_": function, **result})
                 self.assertEqual(clargs.run(args), "SUCCESS")
 
     def test_fail(self):
         PARAMETERS = [
             (str_func, [], "the following arguments are required: foo"),
             (int_func, ["a"], "invalid int value: 'a'"),
-            (no_annotation_func, [],
-             "the following arguments are required: foo"),
+            (no_annotation_func, [], "the following arguments are required: foo"),
             (path_func, [], "the following arguments are required: etc"),
         ]
         for param in PARAMETERS:
@@ -91,15 +88,13 @@ class TestSimpleCases(Base):
     def test_negative_float_without_e(self):
         parser = clargs.create_parser(float_func)
         args = parser.parse_args(["-3.14"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": float_func, "pi": -3.14})
+        self.assertEqual(vars(args), {"_clargs_func_": float_func, "pi": -3.14})
 
     @unittest.expectedFailure  # seems to be an issue in argparse
     def test_negative_float_with_e(self):
         parser = clargs.create_parser(float_func)
         args = parser.parse_args(["-314e-2"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": float_func, "pi": -3.14})
+        self.assertEqual(vars(args), {"_clargs_func_": float_func, "pi": -3.14})
 
     def test_default_value(self):
         def function(foo: str = "bar"):
@@ -123,8 +118,9 @@ class TestSimpleCases(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["foo", "--one", "1"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": "foo", "one": 1})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "foo", "one": 1}
+        )
 
     def test_options_with_default(self):
         def function(foo: str, *, one: int = 1):
@@ -132,11 +128,13 @@ class TestSimpleCases(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["foo"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": "foo", "one": 1})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "foo", "one": 1}
+        )
         args = parser.parse_args(["foo", "--one", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": "foo", "one": 3})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "foo", "one": 3}
+        )
 
     def test_param_name_with_dash(self):
         def function(*, my_number: int = 2):
@@ -144,8 +142,7 @@ class TestSimpleCases(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["--my-number", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "my_number": 3})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "my_number": 3})
         self.assertEqual(clargs.run(args), 3)
         with self.assertExit(msg="unrecognized arguments: --my_number 3"):
             args = parser.parse_args(["--my_number", "3"])
@@ -158,11 +155,9 @@ class TestBooleans(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["YES"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["NO"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
         with self.assertExit(msg="invalid parse_bool value: 'maybe'"):
             parser.parse_args(["maybe"])
 
@@ -172,14 +167,11 @@ class TestBooleans(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["--flag", "YES"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["-f", "YES"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--flag", "NO"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
         with self.assertExit(msg="invalid parse_bool value: 'maybe'"):
             parser.parse_args(["--flag", "maybe"])
 
@@ -199,17 +191,13 @@ class TestFlags(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
         args = parser.parse_args(["--flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["-f"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--no-flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
 
     def test_flags_default_true(self):
         def function(*, flag: clargs.Flag = True):
@@ -217,21 +205,16 @@ class TestFlags(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["-f"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--no-flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
     def test_flags_no_default(self):
         def function(*, flag: clargs.Flag):
@@ -239,25 +222,22 @@ class TestFlags(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["--flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["-f"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--no-flag"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": False})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": False})
         parser = clargs.create_parser(function)
-        with self.assertExit(msg="the following arguments are required: "
-                             "--flag/--no-flag/-f"):
+        with self.assertExit(
+            msg="the following arguments are required: " "--flag/--no-flag/-f"
+        ):
             args = parser.parse_args([])
 
     def test_positional(self):
         def function(flag: clargs.Flag = True):
             pass
 
-        with self.assertRaisesRegex(
-                clargs.GetArgsFromTypeException, "Flag error"):
+        with self.assertRaisesRegex(clargs.GetArgsFromTypeException, "Flag error"):
             clargs.create_parser(function)
 
 
@@ -273,7 +253,7 @@ class TestOptional(Base):
         self.assertEqual(vars(args), {"_clargs_func_": function, "foo": "bar"})
 
     def test_implicit_optional(self):
-        def function(foo: str = None):
+        def function(foo: str = None):  # type: ignore
             pass
 
         parser = clargs.create_parser(function)
@@ -307,11 +287,9 @@ class TestOptional(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "number": None})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "number": None})
         args = parser.parse_args(["1"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "number": 1})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "number": 1})
 
 
 class TestList(Base):
@@ -321,11 +299,11 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["bar1", "bar2"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foos": ["bar1", "bar2"]})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foos": ["bar1", "bar2"]}
+        )
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foos": []})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "foos": []})
 
     def test_list_int(self):
         def function(numbers: t.List[int]):
@@ -333,11 +311,9 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["1", "2"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": [1, 2]})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": [1, 2]})
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": []})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": []})
 
     def test_list_int_literal(self):
         def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
@@ -345,16 +321,12 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["1", "2", "11"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": [1, 2, 11]})
-        with self.assertExit(
-                msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": [1, 2, 11]})
+        with self.assertExit(msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
             parser.parse_args(["4"])
-        with self.assertExit(
-                msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
+        with self.assertExit(msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
             parser.parse_args(["1", "2", "4"])
-        with self.assertExit(
-                msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
+        with self.assertExit(msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
             parser.parse_args(["1", "2", "4", "11"])
 
     @unittest.expectedFailure  # seems to be an issue in argparse
@@ -364,8 +336,7 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": []})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": []})
 
     def test_list_bool(self):
         def function(bools: t.List[bool]):
@@ -373,8 +344,9 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["yes", "no", "true", "False"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "bools": [True, False, True, False]})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "bools": [True, False, True, False]}
+        )
 
     def test_list_str_options(self):
         def function(*, numbers: t.List[int]):
@@ -382,27 +354,20 @@ class TestList(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["--numbers", "1", "2"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": [1, 2]})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": [1, 2]})
         args = parser.parse_args(["--numbers"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": []})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": []})
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": None})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": None})
 
     def test_list_int_minimal_one(self):
-        def function(
-                numbers: t.Annotated[
-                    t.List[int], clargs.extra_info(nargs="+")]):
+        def function(numbers: t.Annotated[t.List[int], clargs.extra_info(nargs="+")]):
             pass
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["1", "2"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "numbers": [1, 2]})
-        with self.assertExit(
-                msg="the following arguments are required: numbers"):
+        self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": [1, 2]})
+        with self.assertExit(msg="the following arguments are required: numbers"):
             parser.parse_args([])
 
 
@@ -413,13 +378,12 @@ class TestLiteral(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["foo"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foobar": "foo"})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "foobar": "foo"})
         args = parser.parse_args(["bar"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foobar": "bar"})
-        with self.assertExit(msg="invalid choice: 'foobar' "
-                             "(choose from 'foo', 'bar', 'baz'"):
+        self.assertEqual(vars(args), {"_clargs_func_": function, "foobar": "bar"})
+        with self.assertExit(
+            msg="invalid choice: 'foobar' " "(choose from 'foo', 'bar', 'baz'"
+        ):
             parser.parse_args(["foobar"])
 
     def test_int_literal(self):
@@ -428,13 +392,10 @@ class TestLiteral(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["1"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "prime": 1})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "prime": 1})
         args = parser.parse_args(["11"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "prime": 11})
-        with self.assertExit(
-                msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
+        self.assertEqual(vars(args), {"_clargs_func_": function, "prime": 11})
+        with self.assertExit(msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
             parser.parse_args(["4"])
 
 
@@ -445,11 +406,9 @@ class TestCount(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": 1})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": 1})
         args = parser.parse_args(["-f"] * 5)
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": 5})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": 5})
 
     def test_count_zero(self):
         def function(*, flag: clargs.Count):
@@ -457,8 +416,7 @@ class TestCount(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": 0})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": 0})
 
     # default gets overwritten (I mean, why would you want this anyways)
     @unittest.expectedFailure
@@ -468,19 +426,17 @@ class TestCount(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args([])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": 3})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": 3})
         args = parser.parse_args(["--flag"] * 3)
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": 6})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": 6})
 
     def test_count_positional(self):
         def function(flag: clargs.Count):
             pass
 
         with self.assertRaisesRegex(
-                TypeError,
-                "'required' is an invalid argument for positionals"):
+            TypeError, "'required' is an invalid argument for positionals"
+        ):
             clargs.create_parser(function)
 
 
@@ -491,11 +447,9 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
-        clargs_obj = clargs.Clargs(
-            clargs.Settings(generate_short_flags=False))
+        clargs_obj = clargs.Clargs(clargs.Settings(generate_short_flags=False))
         parser = clargs_obj.create_parser(function)
         with self.assertExit(msg="unrecognized arguments: -f yes"):
             parser.parse_args(["-f", "yes"])
@@ -506,16 +460,13 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--flag", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
         clargs_obj = clargs.Clargs(
-            clargs.Settings(
-                flag_prefix="++",
-                short_flag_prefix="+"))
+            clargs.Settings(flag_prefix="++", short_flag_prefix="+")
+        )
 
         parser = clargs_obj.create_parser(function)
         with self.assertExit(msg="unrecognized arguments: -f yes"):
@@ -523,11 +474,9 @@ class TestSettings(Base):
         with self.assertExit(msg="unrecognized arguments: --flag yes"):
             parser.parse_args(["--flag", "yes"])
         args = parser.parse_args(["+f", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["++flag", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
     def test_generate_windows_flags(self):
         def function(*, flag: bool = False):
@@ -535,15 +484,13 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["--flag", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
-        clargs_obj = clargs.Clargs(clargs.Settings(
-                flag_prefix="/",
-                generate_short_flags=False))
+        clargs_obj = clargs.Clargs(
+            clargs.Settings(flag_prefix="/", generate_short_flags=False)
+        )
 
         parser = clargs_obj.create_parser(function)
         with self.assertExit(msg="unrecognized arguments: -f yes"):
@@ -551,14 +498,11 @@ class TestSettings(Base):
         with self.assertExit(msg="unrecognized arguments: --flag yes"):
             parser.parse_args(["--flag", "yes"])
         args = parser.parse_args(["/flag", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["/fla", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
         args = parser.parse_args(["/f", "yes"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag": True})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "flag": True})
 
     def test_settings_flag(self):
         def function(foo: str, /, bar: str, *, sasa: str):
@@ -566,17 +510,20 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["foo", "bar", "-s", "sasa"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function,
-            "foo": "foo", "bar": "bar", "sasa": "sasa"})
+        self.assertEqual(
+            vars(args),
+            {"_clargs_func_": function, "foo": "foo", "bar": "bar", "sasa": "sasa"},
+        )
 
-        clargs_obj = clargs.Clargs(clargs.Settings(
-            positional_and_kw_args_become="flag"))
+        clargs_obj = clargs.Clargs(
+            clargs.Settings(positional_and_kw_args_become="flag")
+        )
         parser = clargs_obj.create_parser(function)
         args = parser.parse_args(["foo", "--bar", "bar", "-s", "sasa"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function,
-            "foo": "foo", "bar": "bar", "sasa": "sasa"})
+        self.assertEqual(
+            vars(args),
+            {"_clargs_func_": function, "foo": "foo", "bar": "bar", "sasa": "sasa"},
+        )
 
     def test_settings_flag_if_has_default(self):
         def function(foo: str, bar: str = "baz"):
@@ -584,15 +531,18 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["foo", "bar"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": "foo", "bar": "bar"})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "foo", "bar": "bar"}
+        )
 
-        clargs_obj = clargs.Clargs(clargs.Settings(
-            positional_and_kw_args_become="flag_if_default"))
+        clargs_obj = clargs.Clargs(
+            clargs.Settings(positional_and_kw_args_become="flag_if_default")
+        )
         parser = clargs_obj.create_parser(function)
         args = parser.parse_args(["foo", "--bar", "bar"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": "foo", "bar": "bar"})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "foo", "bar": "bar"}
+        )
 
     def test_settings_no_dash_replacement(self):
         def function(*, my_number: int):
@@ -600,15 +550,12 @@ class TestSettings(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["--my-number", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "my_number": 3})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "my_number": 3})
 
-        clargs_obj = clargs.Clargs(clargs.Settings(
-            replace_underscore_with_dash=False))
+        clargs_obj = clargs.Clargs(clargs.Settings(replace_underscore_with_dash=False))
         parser = clargs_obj.create_parser(function)
         args = parser.parse_args(["--my_number", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "my_number": 3})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "my_number": 3})
 
 
 class TestListOfOne(Base):
@@ -618,8 +565,7 @@ class TestListOfOne(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["2.5", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "foo": [2.5, 3]})
+        self.assertEqual(vars(args), {"_clargs_func_": function, "foo": [2.5, 3]})
 
     def test_list_with_zero_items(self):
         def function(foo: clargs.ListOfAtLeastOne[float]):
@@ -639,6 +585,7 @@ class TestSubParsers(Base):
 
         def do_product(factors: list[float]) -> float:
             import math
+
             return math.prod(factors)
 
         parser = argparse.ArgumentParser()
@@ -660,15 +607,20 @@ class TestFlagShortening(Base):
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag1": 3, "flag2": 2})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "flag1": 3, "flag2": 2}
+        )
 
     def test_multiple_flags_with_shortcode_overridden_later(self):
-        def function(*, flag1: int = 1, flag2: t.Annotated[
-                int, clargs.extra_info(aliases=["-f"])] = 2):
+        def function(
+            *,
+            flag1: int = 1,
+            flag2: t.Annotated[int, clargs.extra_info(aliases=["-f"])] = 2,
+        ):
             pass
 
         parser = clargs.create_parser(function)
         args = parser.parse_args(["-f", "3"])
-        self.assertEqual(vars(args), {
-            "_clargs_func_": function, "flag1": 1, "flag2": 3})
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "flag1": 1, "flag2": 3}
+        )

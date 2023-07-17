@@ -88,8 +88,11 @@ class FormatParser:
     def extract_parameters(self, docstring: str) -> t.Sequence[Param]:
         if self.section_extractor_re:
             section = "\n".join(
-                [textwrap.dedent(match.group("section"))
-                 for match in self.section_extractor_re.finditer(docstring)])
+                [
+                    textwrap.dedent(match.group("section"))
+                    for match in self.section_extractor_re.finditer(docstring)
+                ]
+            )
         else:
             section = docstring
 
@@ -103,25 +106,25 @@ def _get_keyword_start_parser_regex(keyword: str) -> t.Pattern:
     return re.compile(
         r"^"
         "" + re.escape(keyword) + r"\s*"
-        r"(?P<name>\w+)\s*"                  # :param NAME at start of line
+        r"(?P<name>\w+)\s*"  # :param NAME at start of line
         r"(?:\((?P<typeinfo>[^\)]*)\))?\s*"  # optional (TYPE)
-        r":\s*"                              # colon and whitespace
-        r"(?P<description>.*?$)"             # description multi lines
-        r"(?=\s*(?:\Z|^[^ \t]|^$))",         # ends at EOF or \n\n or no indent
-        re.MULTILINE | re.DOTALL
+        r":\s*"  # colon and whitespace
+        r"(?P<description>.*?$)"  # description multi lines
+        r"(?=\s*(?:\Z|^[^ \t]|^$))",  # ends at EOF or \n\n or no indent
+        re.MULTILINE | re.DOTALL,
     )
 
 
 def _get_numpy_param_parser_regex() -> t.Pattern:
     return re.compile(
         r"^"
-        r"(?P<name>\w+)\s*"                  # :param NAME at start of line
-        r":[ \t]*"                              # colon and whitespace
-        r"(?:(?P<typeinfo>[^\n]+))?"      # optional (TYPE)
-        r"\n[ \t]*"                                # newline
-        r"(?P<description>.*?$)"             # description multi lines
-        r"(?=\s*(?:\Z|^[^ \t]|^$))",         # ends at EOF or \n\n or no indent
-        re.MULTILINE | re.DOTALL
+        r"(?P<name>\w+)\s*"  # :param NAME at start of line
+        r":[ \t]*"  # colon and whitespace
+        r"(?:(?P<typeinfo>[^\n]+))?"  # optional (TYPE)
+        r"\n[ \t]*"  # newline
+        r"(?P<description>.*?$)"  # description multi lines
+        r"(?=\s*(?:\Z|^[^ \t]|^$))",  # ends at EOF or \n\n or no indent
+        re.MULTILINE | re.DOTALL,
     )
 
 
@@ -129,33 +132,36 @@ def _get_section_paragraph_regex(
     section_start_re_str: str, *, no_indent_ends_section: bool
 ) -> t.Pattern:
     return re.compile(
-        r"^" + section_start_re_str +
-        r"(?P<section>.*?)"
-        r"(?=\s*(?:\Z|^$"
-        + (r"|^[^ \t]" if no_indent_ends_section else "") +
-        "))",
-        re.MULTILINE | re.DOTALL
+        r"^" + section_start_re_str + r"(?P<section>.*?)"
+        r"(?=\s*(?:\Z|^$" + (r"|^[^ \t]" if no_indent_ends_section else "") + "))",
+        re.MULTILINE | re.DOTALL,
     )
 
 
 FORMAT_PARSERS = {
     "sphynx": FormatParser(
-        param_extractor_re=_get_keyword_start_parser_regex(":param ")),
+        param_extractor_re=_get_keyword_start_parser_regex(":param ")
+    ),
     "epytext": FormatParser(
-        param_extractor_re=_get_keyword_start_parser_regex("@param ")),
+        param_extractor_re=_get_keyword_start_parser_regex("@param ")
+    ),
     "googledoc": FormatParser(
         section_extractor_re=_get_section_paragraph_regex(
-            "Args:\n", no_indent_ends_section=True),
-        param_extractor_re=_get_keyword_start_parser_regex("")),
+            "Args:\n", no_indent_ends_section=True
+        ),
+        param_extractor_re=_get_keyword_start_parser_regex(""),
+    ),
     "numpydoc": FormatParser(
         section_extractor_re=_get_section_paragraph_regex(
-            "Parameters:?\n-+\n", no_indent_ends_section=False),
-        param_extractor_re=_get_numpy_param_parser_regex())
+            "Parameters:?\n-+\n", no_indent_ends_section=False
+        ),
+        param_extractor_re=_get_numpy_param_parser_regex(),
+    ),
 }
 
 
 def get_parameter_info_from_docstring(docstring: str) -> t.Sequence[Param]:
-    results = []
+    results: t.Sequence[Param] = []
     for parser in FORMAT_PARSERS.values():
         parser_results = parser.extract_parameters(docstring)
         if len(parser_results) > len(results):
@@ -164,7 +170,8 @@ def get_parameter_info_from_docstring(docstring: str) -> t.Sequence[Param]:
 
 
 if __name__ == "__main__":
-    docstring = textwrap.dedent("""\
+    docstring = textwrap.dedent(
+        """\
         This is some info:
 
         Args:
@@ -200,6 +207,7 @@ if __name__ == "__main__":
         @param epytextparam: this is a param
         @param epytextint(int): this is a very
          long param description
-         """)
+         """
+    )
     for name, parser in FORMAT_PARSERS.items():
         print(f"{name}: {parser.extract_parameters(docstring)}")
