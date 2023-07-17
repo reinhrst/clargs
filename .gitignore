@@ -3,3 +3,5 @@ __pycache__
 trial
 .tox/
 src/clargs.egg-info/
+build/
+dist/
