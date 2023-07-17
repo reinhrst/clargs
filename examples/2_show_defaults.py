@@ -20,7 +20,7 @@ options:
 
 """
 import argparse
-import argize
+import clargs
 
 
 def count(
@@ -28,7 +28,7 @@ def count(
     plural: str,
     maxitems: int = 10,
     *,
-    shout: argize.Flag = False,
+    shout: clargs.Flag = False,
 ):
     """
     Counts from 1 to given number (default = 10)
@@ -51,6 +51,6 @@ if __name__ == "__main__":
     # You can set a custom formatter_class for printing help
     # The argparse.ArgumentDefaultsHelpFormatter shows default values
     # in the help
-    parser = argize.create_parser(count)
+    parser = clargs.create_parser(count)
     parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
-    argize.run(parser.parse_args())
+    clargs.run(parser.parse_args())

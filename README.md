@@ -1,6 +1,6 @@
-# Argize
+# Clargs
 
-The goal of the `argize` package is to create commandline interfaces from function signatures.
+The goal of the `clargs` package is to create commandline interfaces from function signatures.
 
 - With a single line, an existing function is turned into a command line program
 - However it also has the flexibility to be the command line interface of a finished product
@@ -21,7 +21,7 @@ Check out the [list of examples][3] to see the package in action
 
 A quick example (just to get you excited):
 ```python
-import argize
+import clargs
 
 
 def count(
@@ -49,7 +49,7 @@ def count(
 
 
 if __name__ == "__main__":
-    argize.create_parser_and_run(count)
+    clargs.create_parser_and_run(count)
 ```
 
 ```console
@@ -115,15 +115,15 @@ Lists of items is supported (for all pf the above types). For instance a signatu
 
 ### Extra Types
 
-In addition to normal types, the `argize` package defines some special types.
+In addition to normal types, the `clargs` package defines some special types.
 
-#### `argize.Flag`
+#### `clargs.Flag`
 
 Is an alias for `bool` (should be recognised by static type-checkers).
 Creates `--foo/--no-foo` parameter pair to control booleans
 
 
-#### `argize.Count`
+#### `clargs.Count`
 
 Is an alias for `int` (should be recognised by static type-checkers).
 Counts how often a parameter is present (mostly used in `--verbose --verbose --verbose` parameters)
@@ -141,7 +141,7 @@ Using subparsers it's possible to add multiple functions to your cli. See [an ex
 
 ## Compare to other solutions
 
-`argize` is far from the first solutions. Before development I looked at some of the alternatives out there, and found them
+`clargs` is far from the first solutions. Before development I looked at some of the alternatives out there, and found them
 - [`clize`][4] is an amazing product, however it's just getting started with PEP 484 typing support (and made some decisions in the past to use the type hints for other things, which feel limits flexibility now).
 - [TODO]
 

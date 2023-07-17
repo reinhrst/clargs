@@ -8,7 +8,7 @@ import typing as t
 from . import aap_from_data
 from . import docsparser
 
-logger = logging.getLogger("argize")
+logger = logging.getLogger("clargs")
 
 # simple types are those types that have a constructor taking a single str
 SIMPLE_TYPES = (str, int, float, pathlib.Path)
@@ -151,7 +151,7 @@ def extra_info(
         ))
 
 
-class Argize:
+class Clargs:
     settings: Settings
 
     def __init__(self, settings: t.Optional[Settings] = None):
@@ -177,7 +177,7 @@ class Argize:
     def add_to_parser(
         self, parser: argparse.ArgumentParser, func: t.Callable
     ) -> None:
-        parser.set_defaults(_argize_func_=func)
+        parser.set_defaults(_clargs_func_=func)
         signature = inspect.signature(func)
         docstring = inspect.getdoc(func) or ""
         paramdescriptions = {
@@ -191,7 +191,7 @@ class Argize:
                     self.settings).get_args_and_aap()
                 for param in signature.parameters.values()]
 
-        args_and_aap_s = Argize._filter_out_taken_names_from_auto_names(
+        args_and_aap_s = Clargs._filter_out_taken_names_from_auto_names(
             args_and_aap_s)
 
         for (args, aap), param in zip(
@@ -245,9 +245,9 @@ class Argize:
     @staticmethod
     def run(args):
         logger.debug("Received parsed args %s", args)
-        assert "_argize_func_" in args
-        return args._argize_func_(
-            **{k: v for k, v in vars(args).items() if k != "_argize_func_"})
+        assert "_clargs_func_" in args
+        return args._clargs_func_(
+            **{k: v for k, v in vars(args).items() if k != "_clargs_func_"})
 
     def create_parser_and_run(
         self,
@@ -255,24 +255,24 @@ class Argize:
         args=None
     ) -> RET:
         parser = self.create_parser(func)
-        return Argize.run(parser.parse_args(args))
+        return Clargs.run(parser.parse_args(args))
 
 
 def create_parser(func: t.Callable) -> argparse.ArgumentParser:
-    return Argize().create_parser(func)
+    return Clargs().create_parser(func)
 
 
 def add_to_parser(parser: argparse.ArgumentParser, func: t.Callable) -> None:
-    return Argize().add_to_parser(parser, func)
+    return Clargs().add_to_parser(parser, func)
 
 
 def add_subparser(subparsers, func: t.Callable) -> None:
-    return Argize().add_subparser(subparsers, func)
+    return Clargs().add_subparser(subparsers, func)
 
 
 def run(args):
-    return Argize.run(args)
+    return Clargs.run(args)
 
 
 def create_parser_and_run(func: t.Callable[..., RET], args=None) -> RET:
-    return Argize().create_parser_and_run(func, args)
+    return Clargs().create_parser_and_run(func, args)

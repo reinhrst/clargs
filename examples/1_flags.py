@@ -51,7 +51,7 @@ usage: 1_flags.py [-h] [--shout | --no-shout | -s] singular plural [maxitems]
 1_flags.py: error: argument --shout/--no-shout/-s: ignored explicit argument 'yes'
 
 """
-import argize
+import clargs
 
 
 def count(
@@ -59,8 +59,8 @@ def count(
     plural: str,
     maxitems: int = 10,
     *,
-    # Type argize.Flag is an alias for bool, which allows --shout/--no-shout
-    shout: argize.Flag = False,
+    # Type clargs.Flag is an alias for bool, which allows --shout/--no-shout
+    shout: clargs.Flag = False,
 ):
     """
     Counts from 1 to given number (default = 10)
@@ -80,4 +80,4 @@ def count(
 
 
 if __name__ == "__main__":
-    argize.create_parser_and_run(count)
+    clargs.create_parser_and_run(count)

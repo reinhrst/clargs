@@ -1,5 +1,5 @@
 import argparse
-from . import argize
+from . import clargs
 import typing as t
 
 
@@ -18,21 +18,21 @@ def BooleanOptionalActionWitoutImplicitDefault(option_strings, dest, **kwargs):
 
 Flag = t.Annotated[
         bool,
-        argize.extra_info(
-            type=argize.UNSET,
-            nargs=argize.UNSET,
+        clargs.extra_info(
+            type=clargs.UNSET,
+            nargs=clargs.UNSET,
             action=BooleanOptionalActionWitoutImplicitDefault,
         )]
 
 Count = t.Annotated[
         int,
-        argize.extra_info(
-            type=argize.UNSET,
-            nargs=argize.UNSET,
+        clargs.extra_info(
+            type=clargs.UNSET,
+            nargs=clargs.UNSET,
             action="count",
             default=0,
             required=False,
         )]
 
 T = t.TypeVar("T", bound=t.Type)
-ListOfAtLeastOne = t.Annotated[list[T], argize.extra_info(nargs="+")]
+ListOfAtLeastOne = t.Annotated[list[T], clargs.extra_info(nargs="+")]

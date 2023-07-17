@@ -1,6 +1,6 @@
 import textwrap
 from test_simple import Base
-from argize.docsparser import get_parameter_info_from_docstring, Param
+from clargs.docsparser import get_parameter_info_from_docstring, Param
 
 
 class DocParserBase(Base):

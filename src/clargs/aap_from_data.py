@@ -1,6 +1,6 @@
 from __future__ import annotations
 import inspect
-from . import argize
+from . import clargs
 import types
 import typing as t
 import pathlib
@@ -47,8 +47,8 @@ def issubclass_rugged(subcls, parentcls) -> bool:
 class AapFromData(t.Generic[T]):
     typ: t.Type[T]
     param: inspect.Parameter
-    settings: argize.Settings
-    extra_info: argize.ExtraInfo
+    settings: clargs.Settings
+    extra_info: clargs.ExtraInfo
     docstring_description: t.Optional[str]
 
     @classmethod
@@ -56,7 +56,7 @@ class AapFromData(t.Generic[T]):
         cls,
         param: inspect.Parameter,
         docstring_description: t.Optional[str],
-        settings: argize.Settings,
+        settings: clargs.Settings,
     ) -> AapFromData[T]:
         if param.kind not in (
                 inspect.Parameter.POSITIONAL_ONLY,
@@ -83,12 +83,12 @@ class AapFromData(t.Generic[T]):
                 metadatas = [*metadatas, *extra_metadatas]
 
         extra_infos = [
-            *(md for md in metadatas if isinstance(md, argize.ExtraInfo)),
+            *(md for md in metadatas if isinstance(md, clargs.ExtraInfo)),
         ]
         if len(extra_infos) > 1:
             raise GetArgsFromTypeException(
                 param, "Can only have one ExtraInfo")
-        extra_info = extra_infos[0] if extra_infos else argize.ExtraInfo()
+        extra_info = extra_infos[0] if extra_infos else clargs.ExtraInfo()
 
         return cls(
             typ=typ,
@@ -102,7 +102,7 @@ class AapFromData(t.Generic[T]):
         return self.param.default is not inspect.Parameter.empty
 
     def get_all_param_names(self) -> t.Sequence[str]:
-        has_custom_name = self.extra_info.name is not argize.NOT_SET
+        has_custom_name = self.extra_info.name is not clargs.NOT_SET
         param_name_with_replacement = self.param.name.replace("_", "-") \
             if self.settings.replace_underscore_with_dash else self.param.name
         param_name = t.cast(
@@ -139,31 +139,31 @@ class AapFromData(t.Generic[T]):
 
     def handle_simple_type(
         self, *, override_typ=None
-    ) -> None | argize.AddArgumentParameters[T]:
+    ) -> None | clargs.AddArgumentParameters[T]:
         typ = override_typ or self.typ
         handler = SIMPLE_TYPES.get(typ)
         if handler:
-            return argize.AddArgumentParameters(type=handler)
+            return clargs.AddArgumentParameters(type=handler)
         return None
 
-    def handle_explicit_type(self) -> None | argize.AddArgumentParameters[T]:
+    def handle_explicit_type(self) -> None | clargs.AddArgumentParameters[T]:
         if isinstance(self.extra_info.add_argument_parameters.type,
-                      argize.NOT_SET_TYPE):
+                      clargs.NOT_SET_TYPE):
             return None
         return self.extra_info.add_argument_parameters
 
-    def handle_mapping(self) -> None | argize.AddArgumentParameters[T]:
-        if isinstance(self.extra_info.mapping, argize.NOT_SET_TYPE):
+    def handle_mapping(self) -> None | clargs.AddArgumentParameters[T]:
+        if isinstance(self.extra_info.mapping, clargs.NOT_SET_TYPE):
             return None
         mapping = self.extra_info.mapping
-        return argize.AddArgumentParameters(
+        return clargs.AddArgumentParameters(
                 choices=list(mapping.keys()),
                 type=lambda x: mapping[x],
         )
 
     def handle_literal(
         self, *, override_typ=None
-    ) -> None | argize.AddArgumentParameters[T]:
+    ) -> None | clargs.AddArgumentParameters[T]:
         typ = override_typ or self.typ
         if t.get_origin(typ) != t.Literal:
             return None
@@ -184,7 +184,7 @@ class AapFromData(t.Generic[T]):
                 "Cannot parse base type for literal")
         return result.with_fields({"choices": args})
 
-    def handle_list(self) -> None | argize.AddArgumentParameters[T]:
+    def handle_list(self) -> None | clargs.AddArgumentParameters[T]:
         if not issubclass_rugged(t.get_origin(self.typ), t.Sequence):
             return None
         if issubclass_rugged(t.get_origin(self.typ), t.Tuple):
@@ -205,7 +205,7 @@ class AapFromData(t.Generic[T]):
 
     def get_args_and_aap(
         self
-    ) -> t.Tuple[t.Sequence[str], argize.AddArgumentParameters[T]]:
+    ) -> t.Tuple[t.Sequence[str], clargs.AddArgumentParameters[T]]:
         aap = (None
                or self.handle_explicit_type()
                or self.handle_literal()

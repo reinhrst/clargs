@@ -57,7 +57,7 @@ usage: 3_list.py [-h] [--shout | --no-shout | -s]
 
 """
 import argparse
-import argize
+import clargs
 import typing as t
 
 
@@ -73,7 +73,7 @@ def count(
     *,
     # By giving shout a default value of None, it can switch between
     # three states now (--shout / --no-shout or nothing).
-    shout: t.Optional[argize.Flag] = None,
+    shout: t.Optional[clargs.Flag] = None,
 ):
     """
     Counts from 1 to given number (default = 10)
@@ -97,6 +97,6 @@ def count(
 
 
 if __name__ == "__main__":
-    parser = argize.create_parser(count)
+    parser = clargs.create_parser(count)
     parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
-    argize.run(parser.parse_args())
+    clargs.run(parser.parse_args())

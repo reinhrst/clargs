@@ -1,5 +1,5 @@
-from .argize import (
-    Argize,
+from .clargs import (
+    Clargs,
     Settings,
     ExtraInfo,
     extra_info,
@@ -22,7 +22,7 @@ from .aap_from_data import (
 )
 
 __all__ = [
-    "Argize",
+    "Clargs",
     "Settings",
     "ExtraInfo",
     "extra_info",

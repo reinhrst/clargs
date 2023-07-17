@@ -40,7 +40,7 @@ usage: 0_basic.py [-h] [--shout SHOUT] singular plural [maxitems]
 5 HUMANS
 
 """
-import argize
+import clargs
 
 
 def count(
@@ -68,4 +68,4 @@ def count(
 
 
 if __name__ == "__main__":
-    argize.create_parser_and_run(count)
+    clargs.create_parser_and_run(count)

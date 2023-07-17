@@ -73,7 +73,7 @@ usage: 4_parse_groups.py math [-h] [--round-to-int | --no-round-to-int | -r]
 
 """
 import argparse
-import argize
+import clargs
 import operator as mod_operator
 import typing as t
 
@@ -89,7 +89,7 @@ def count(
     *,
     # By giving shout a default value of None, it can switch between
     # three states now (--shout / --no-shout or nothing).
-    shout: t.Optional[argize.Flag] = None,
+    shout: t.Optional[clargs.Flag] = None,
 ):
     """
     Counts from 1 to given number (default = 10)
@@ -115,11 +115,11 @@ def count(
 def math(
     operator: t.Literal["add", "mul", "sub", "truediv"],
     # This helper class defines a list of size 1 or more
-    numbers: argize.ListOfAtLeastOne[float],
+    numbers: clargs.ListOfAtLeastOne[float],
     *,
     # note that underscores will become dashes in cli
-    round_to_int: argize.Flag = False,
-    absolute_value: argize.Flag = False,
+    round_to_int: clargs.Flag = False,
+    absolute_value: clargs.Flag = False,
 ):
     """
     Does math on the list of numbers, based on the first term
@@ -145,6 +145,6 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     subparsers = parser.add_subparsers()
-    argize.add_subparser(subparsers, count)
-    argize.add_subparser(subparsers, math)
-    argize.run(parser.parse_args())
+    clargs.add_subparser(subparsers, count)
+    clargs.add_subparser(subparsers, math)
+    clargs.run(parser.parse_args())

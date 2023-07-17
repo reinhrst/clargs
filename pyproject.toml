@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "argize"
-version = "0.0.1"
-description = "Easily generate commandline apps from your functions"
+name = "clargs"
+version = "0.5.0"
+description = "Easily generate commandline apps from your functions, based on type hints"
 authors = [
   { name = "Claude", email = "pypi@claude.nl" },
 ]
@@ -19,5 +19,5 @@ classifiers = [
 requires-python = ">=3.9"  # will probably work onm older pythons too
 
 [project.urls]
-"Homepage" = "https://github.com/reinhrst/argize"
-"Bug Tracker" = "https://github.com/reinhrst/argize/issues"
+"Homepage" = "https://github.com/reinhrst/clargs"
+"Bug Tracker" = "https://github.com/reinhrst/clargs/issues"
