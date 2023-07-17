@@ -37,5 +37,5 @@ Count = t.Annotated[
     ),
 ]
 
-T = t.TypeVar("T")
-ListOfAtLeastOne = t.Annotated[list[T], clargs.extra_info(nargs="+")]
+TYPE = t.TypeVar("TYPE")
+ListOfAtLeastOne = t.Annotated[list[TYPE], clargs.extra_info(nargs="+")]
