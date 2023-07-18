@@ -2,17 +2,17 @@
 
 The goal of the `clargs` package is to create commandline interfaces from function signatures.
 
-- With a single line, an existing function is turned into a command line program
-- However it also has the flexibility to be the command line interface of a finished product
-- Explicit goal is **Don't Repeat Yourself**. All information is in a single spot (where you define the function)
-- Pure python and no dependencies (except for running test)
-- Support for `int`, `float`, `bool`, `pathlib.Path`, `list` and `typing.Literal` built-in (more coming)
-- Support for flags (`--foo/--no-foo`)
-- Automatic underscore-to-dash conversion (`foo_bar` becomes `--foo-bar`), and creation of short flags (`--foo-bar` and `-f` are both supported)
-- Type of a parameter is set through [PEP 484][2]-style type hints
-- Defaults are taken from the function signature
-- Based on the built-in `argparse` module
-- Function documentation creates command line arguments documentation
+- **Hit the ground running**: With a single line, an existing function is turned into a command line program
+- **Extensible**: It is flexible enough to do everything that `argparse` does, and keeps you in control
+- **No magic**: All the extension does is call commands in `argparse`; you can log and see these commands
+- **Safe**: The built-in python `argparse` module does all the work, so safety guarantees from that module apply
+- **Typing**: Parameter types are set as [PEP 484][2] type hints (e.g. `def foo(bar: int)`)
+- **Standard**: By using `argparse`, you get standard behaviour such as long/short parameters, combine flags, help function
+- **Don't repeat yourself**: Every parameter is defined (changed, added, removed) in one spot and only one spot, the function definition
+- **Rich parameter types**: Support for `str`, `int`, `float`, `bool`, `pathlib.Path` and `typing.Literal` (multiple-choice values)
+- **Richer parameter types**: In addition, lists of these parameters are allowed, default values, boolean-flags (`--foo/--no-foo`), counts
+- **Simple**: Pure python, no dependencies
+- **Documentation**: Function's docstring creates `--help` documentation. Support for `Sphynx`, `GoogleDoc`, `NumpyDoc`, `EpyText`
 
 
 ## Example
