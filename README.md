@@ -136,17 +136,61 @@ In the meantime, any type not listed here will also work as long as an explicit 
 
 ## Subparsers
 
-Using subparsers it's possible to add multiple functions to your cli. See [an example here][5]
+Using subparsers it's possible to add multiple functions to your cli. See [an example here][4]
 
+## Debug output
+
+`clargs` uses python's `logging` module to log to `DEBUG` level exactly what is being added to `argparse`'s `add_argument()` function.
+By making the logger output this to screen, you can debug what's going on.
+
+See [an example here][5]
+
+## Global Settings
+
+You can control settings on how `clargs` works, by using the `clargs.Clargs` class to call your functions.
+
+```
+myclargs = clargs.Clargs(clargs.Settings(...))
+myclargs.create_parser_and_run(func)
+```
+
+You can use the following settings (as keyword arguments to `Settings`)
+
+### `flag_prefix` (default `--`)
+If you want another flag prefix (e.g. `++` or `/` for windows-like flags), set this here.
+If you provide your own parser (i.e. you don't use `create_parser()` on the `Clargs` object), you need to make sure you set `prefix_chars` correctly on the parser.
+
+### `short_flag_prefix` (default `-`)
+Same but for the short flags
+
+### `generate_short_flags` (default `True`)
+If true, short flags are generated (so you can use `-f` instead of `--foo`.
+Note that the short flag is only generated for the first parameter starting with a certain letter.
+
+### `positional_and_kw_args_become` (default `positional`)
+Python functions can have positional-only arguments (anything before `/`), keyword-only arguments (anything after `*`), and arguments that can be used both positionally and as keywords (default).
+Positional-only arguments always become positional commandline arguments. Keyword-only arguments always become keyword commandline arguments (flags).
+This parameter determines what to do with arguments that can be both positional and keyword.
+
+- `positional` those arguments are rendered as positional commandline arguments
+- `flag` those arguments are rendered as keyword commandline arguments (flags)
+- `flag_if_default` those arguments are rendered as flags if they have a default value, else as positional commandline arguments.
+
+### `replace_underscore_with_dash` (default `True`)
+If false, underscores are not replaced with dashes for the commandline arguments.
+In the default behaviour, a function parameter `foo_bar` will become a flag `--foo-bar`. If this parameter is false, it becomes `--foo_bar`.
+
+This only affects keyword parameters (flags), and subparser commands (so if a subparser is created for the function `count_down`, then the commandline command will be `count-down`.
 
 ## Compare to other solutions
 
-`clargs` is far from the first solutions. Before development I looked at some of the alternatives out there, and found them
-- [`clize`][4] is an amazing product, however it's just getting started with PEP 484 typing support (and made some decisions in the past to use the type hints for other things, which feel limits flexibility now).
-- [TODO]
+There are many other solutions to create command line interfaces from functions.
+I don't think it makes sense to create a comparison list of features now, only to have it be not up to date anymore tomorrow.
 
-[1]: https://docs.python.org/3/library/typing.html#typing.Annotated
+The reasons that I developed `clargs` is because I could not find any solution that made me happy (based on the features and properties I describe above).
+
+
 [2]: https://peps.python.org/pep-0484/
 [3]: examples/
-[4]: https://github.com/epsy/clize
-[5]: examples/4_parse_groups.py
+[4]: examples/4_parse_groups.py
+[5]: examples/5_logging.py
