@@ -156,6 +156,26 @@ class TestSimpleCases(Base):
         self.assertEqual(vars(args), {"_clargs_func_": function, "my_number": 3})
         self.assertEqual(clargs.run(args), 3)
 
+    def test_positional_only_param(self):
+        def function(mynumber: int = 2, /):
+            return mynumber
+
+        parser = clargs.create_parser(function)
+        args = parser.parse_args(["3"])
+        self.assertEqual(vars(args), {"_clargs_func_": function, "mynumber": 3})
+        self.assertEqual(clargs.run(args), 3)
+
+    def test_mixed_params(self):
+        def function(a: int, /, b: int, *, c: int):
+            return a + b + c
+
+        parser = clargs.create_parser(function)
+        args = parser.parse_args(["3", "5", "--c", "7"])
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "a": 3, "b": 5, "c": 7}
+        )
+        self.assertEqual(clargs.run(args), 15)
+
 
 class TestBooleans(Base):
     def test_boolean(self):

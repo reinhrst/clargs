@@ -274,9 +274,18 @@ class Clargs:
     def run(args):
         logger.debug("Received parsed args %s", args)
         assert "_clargs_func_" in args
-        return args._clargs_func_(
-            **{k: v for k, v in vars(args).items() if k != "_clargs_func_"}
-        )
+        function = args._clargs_func_
+        positional_parameters = [
+            param
+            for param in inspect.signature(function).parameters.values()
+            if param.kind == inspect.Parameter.POSITIONAL_ONLY
+        ]
+        argsdict = vars(args)
+        args = {p.name: argsdict[p.name] for p in positional_parameters}
+        kwargs = {
+            k: v for k, v in argsdict.items() if k != "_clargs_func_" and k not in args
+        }
+        return function(*args.values(), **kwargs)
 
     def create_parser_and_run(self, func: t.Callable[..., RET], args=None) -> RET:
         parser = self.create_parser(func)

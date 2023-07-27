@@ -113,8 +113,7 @@ class AapFromData(t.Generic[T]):
         has_custom_name = self.extra_info.name is not clargs.NOT_SET
         param_name_with_replacement = (
             self.param.name.replace("_", "-")
-            if self.settings.replace_underscore_with_dash
-            and self.arg_type_is_flag()
+            if self.settings.replace_underscore_with_dash and self.arg_type_is_flag()
             else self.param.name
         )
         param_name = t.cast(
