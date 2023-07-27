@@ -147,6 +147,15 @@ class TestSimpleCases(Base):
         with self.assertExit(msg="unrecognized arguments: --my_number 3"):
             args = parser.parse_args(["--my_number", "3"])
 
+    def test_positional_param_name_with_underscore(self):
+        def function(my_number: int = 2):
+            return my_number
+
+        parser = clargs.create_parser(function)
+        args = parser.parse_args(["3"])
+        self.assertEqual(vars(args), {"_clargs_func_": function, "my_number": 3})
+        self.assertEqual(clargs.run(args), 3)
+
 
 class TestBooleans(Base):
     def test_boolean(self):

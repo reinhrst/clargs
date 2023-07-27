@@ -114,6 +114,7 @@ class AapFromData(t.Generic[T]):
         param_name_with_replacement = (
             self.param.name.replace("_", "-")
             if self.settings.replace_underscore_with_dash
+            and self.arg_type_is_flag()
             else self.param.name
         )
         param_name = t.cast(
