@@ -344,6 +344,38 @@ class TestList(Base):
         args = parser.parse_args([])
         self.assertEqual(vars(args), {"_clargs_func_": function, "numbers": []})
 
+    def test_list_int_flag(self):
+        def function(foo: str, *, numbers: list[int]):
+            pass
+
+        parser = clargs.create_parser(function)
+        args = parser.parse_args(["bar", "--numbers", "1", "2"])
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "bar", "numbers": [1, 2]})
+        args = parser.parse_args(["bar", "--numbers"])
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "bar", "numbers": []})
+        args = parser.parse_args(
+            ["bar", "--numbers", "1", "2", "--numbers", "3", "--numbers", "4", "5"])
+        self.assertEqual(vars(args), {
+            "_clargs_func_": function, "foo": "bar", "numbers": [1, 2, 3, 4, 5]})
+
+    def test_list_int_flag_with_default(self):
+        def function(foo: str, *, numbers: list[int] = []):
+            pass
+
+        parser = clargs.create_parser(function)
+        args = parser.parse_args(["bar", "--numbers", "1", "2"])
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "bar", "numbers": [1, 2]})
+        args = parser.parse_args(["bar", "--numbers"])
+        self.assertEqual(
+            vars(args), {"_clargs_func_": function, "foo": "bar", "numbers": []})
+        args = parser.parse_args(
+            ["bar", "--numbers", "1", "2", "--numbers", "3", "--numbers", "4", "5"])
+        self.assertEqual(vars(args), {
+            "_clargs_func_": function, "foo": "bar", "numbers": [1, 2, 3, 4, 5]})
+
     def test_list_int_literal(self):
         def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
             pass

@@ -247,7 +247,8 @@ class AapFromData(t.Generic[T]):
             if self.arg_type_is_flag() and not aap.action:
                 aap = aap.with_fields({"required": False})
             else:
-                aap = aap.with_fields({"nargs": "?"})
+                if aap.nargs == clargs.NOT_SET:
+                    aap = aap.with_fields({"nargs": "?"})
         else:
             if (
                 self.arg_type_is_flag()
