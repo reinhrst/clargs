@@ -128,11 +128,25 @@ Creates `--foo/--no-foo` parameter pair to control booleans
 Is an alias for `int` (should be recognised by static type-checkers).
 Counts how often a parameter is present (mostly used in `--verbose --verbose --verbose` parameters)
 
+#### `clargs.ExistingDirectoryPath`
+
+Is an alias for `pathlib.Path` (should be recognised by static type-checkers).
+It adds validation to confirm that the path is existing, and is a directory.
+
+#### `clargs.ExistingFilePath`
+
+Is an alias for `pathlib.Path` (should be recognised by static type-checkers).
+It adds validation to confirm that the path is existing, and is a file.
+
 ### Custom Type
 
-I hope to add types quickly in future versions.
+TODO: Describe how to make custom functions.
 
-In the meantime, any type not listed here will also work as long as an explicit conversion function is defined.
+### Validation
+
+Experimental support for validation is added, see [this example][6].
+There is no clean way yet to give a proper custom error message in case of an
+exception.
 
 ## Subparsers
 
@@ -194,3 +208,4 @@ The reasons that I developed `clargs` is because I could not find any solution t
 [3]: examples/
 [4]: examples/4_parse_groups.py
 [5]: examples/5_logging.py
+[6]: examples/6_validation.py

@@ -1,4 +1,5 @@
 import argparse
+import pathlib
 from . import clargs
 import typing as t
 
@@ -34,6 +35,20 @@ Count = t.Annotated[
         action="count",
         default=0,
         required=False,
+    ),
+]
+
+ExistingDirectoryPath = t.Annotated[
+    pathlib.Path,
+    clargs.extra_info(
+        validate=lambda p: p.is_dir(),
+    ),
+]
+
+ExistingFilePath = t.Annotated[
+    pathlib.Path,
+    clargs.extra_info(
+        validate=lambda p: p.is_file(),
     ),
 ]
 

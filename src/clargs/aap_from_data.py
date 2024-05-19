@@ -260,14 +260,17 @@ class AapFromData(t.Generic[T]):
         # overwrite any explicitly set data
         aap = aap.with_fields(self.extra_info.add_argument_parameters)
 
-        if self.extra_info.validate:
+        if self.extra_info.validate is not clargs.NOT_SET:
             assert aap.type
+            oldaap = aap
 
             def validate(*args, **kwargs):
-                result = aap.type(*args, **kwargs)
+                result = oldaap.type(*args, **kwargs)
                 if not self.extra_info.validate(result):
                     raise ValueError("Problem with validation")
                 return result
+
+            validate.__name__ = f"{aap.type.__name__}-validation"
 
             aap = aap.with_fields({"type": validate})
 

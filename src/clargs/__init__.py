@@ -15,6 +15,8 @@ from .helper_types import (
     Flag,
     Count,
     ListOfAtLeastOne,
+    ExistingFilePath,
+    ExistingDirectoryPath,
 )
 
 from .aap_from_data import GetArgsFromTypeException
@@ -32,6 +34,8 @@ __all__ = [
     "run",
     "Flag",
     "Count",
-    "ListOfAtLeatOne",
+    "ListOfAtLeastOne",
     "GetArgsFromTypeException",
+    "ExistingFilePath",
+    "ExistingDirectoryPath",
 ]
