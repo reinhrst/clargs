@@ -27,7 +27,7 @@ jobs:
         python-version: "3.x"
     - name: Fix links
       run: >-
-        sed -iE '/^[[0-9]+\]: https:/! s|^\[([0-9]+)\]: |[\1]: https://github.com/reinhrst/clargs/tree/main/|' README.md
+        sed -Ei '/^[[0-9]+\]: https:/! s|^\[([0-9]+)\]: |[\1]: https://github.com/reinhrst/clargs/tree/main/|' README.md
     - name: Install pypa/build
       run: >-
         python3 -m
