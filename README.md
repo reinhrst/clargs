@@ -205,7 +205,7 @@ The reasons that I developed `clargs` is because I could not find any solution t
 
 
 [2]: https://peps.python.org/pep-0484/
-[3]: examples/
-[4]: examples/4_parse_groups.py
-[5]: examples/5_logging.py
-[6]: examples/6_validation.py
+[3]: https://github.com/reinhrst/clargs/tree/main/examples/
+[4]: https://github.com/reinhrst/clargs/tree/main/examples/4_parse_groups.py
+[5]: https://github.com/reinhrst/clargs/tree/main/examples/5_logging.py
+[6]: https://github.com/reinhrst/clargs/tree/main/examples/6_validation.py
