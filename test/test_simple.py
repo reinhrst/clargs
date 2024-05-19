@@ -37,6 +37,18 @@ def setUpModule():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 
+def expectedFailureIf(condition):
+    """The test is marked as an expectedFailure if the condition is satisfied."""
+
+    def wrapper(func):
+        if condition:
+            return unittest.expectedFailure(func)
+        else:
+            return func
+
+    return wrapper
+
+
 class Base(unittest.TestCase):
     @contextlib.contextmanager
     def assertExit(self, *, msg: t.Optional[str] = None, regex: t.Optional[str] = None):
@@ -400,7 +412,8 @@ class TestList(Base):
         with self.assertExit(msg="invalid choice: 4 (choose from 1, 2, 3, 5, 7, 11)"):
             parser.parse_args(["1", "2", "4", "11"])
 
-    @unittest.expectedFailure  # seems to be an issue in argparse
+    # seems to be an issue in argparse, fixed in 3.12
+    @expectedFailureIf(sys.version_info < (3, 12))
     def test_list_int_literal_empty_list(self):
         def function(numbers: t.List[t.Literal[1, 2, 3, 5, 7, 11]]):
             pass
