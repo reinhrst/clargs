@@ -25,12 +25,22 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.x"
+    - name: Fix links
+      run: >-
+        sed -iE '/^[[0-9]+\]: https:/! s|^\[([0-9]+)\]: |[\1]: https://github.com/reinhrst/clargs/tree/main/|' README.md
     - name: Install pypa/build
       run: >-
         python3 -m
         pip install
         build
         --user
+    - name: Build a binary wheel and a source tarball
+      run: >-
+        python3 -m
+        build
+        --sdist
+        --wheel
+        --outdir dist/
     - name: Build a binary wheel and a source tarball
       run: >-
         python3 -m

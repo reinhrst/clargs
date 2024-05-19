@@ -261,16 +261,16 @@ class AapFromData(t.Generic[T]):
         aap = aap.with_fields(self.extra_info.add_argument_parameters)
 
         if self.extra_info.validate is not clargs.NOT_SET:
-            assert aap.type
-            oldaap = aap
+            assert not isinstance(aap.type, clargs.NOT_SET_TYPE)
+            originaltype = aap.type
 
             def validate(*args, **kwargs):
-                result = oldaap.type(*args, **kwargs)
+                result = originaltype(*args, **kwargs)
                 if not self.extra_info.validate(result):
                     raise ValueError("Problem with validation")
                 return result
 
-            validate.__name__ = f"{aap.type.__name__}-validation"
+            validate.__name__ = f"{originaltype.__name__}-validation"
 
             aap = aap.with_fields({"type": validate})
 
