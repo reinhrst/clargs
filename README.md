@@ -1,5 +1,7 @@
 # Clargs
 
+![Tests](https://github.com/reinhrst/clargs/workflows/Run%20package%20tests/badge.svg)
+
 The goal of the `clargs` package is to create commandline interfaces from function signatures.
 
 - **Hit the ground running**: With a single line, an existing function is turned into a command line program
