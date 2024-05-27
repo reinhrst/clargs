@@ -29,3 +29,9 @@ jobs:
         path: dist
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+    - uses: actions/checkout@v4
+    - name: Tag version and push
+      run:  |
+          VERSION="PACKAGE/v$(ls -1 *.whl | head | cut -f2 -d-)"
+          git tag "$(VERSION)"
+          git push --tags
