@@ -12,6 +12,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        hatch-command: ['test -py 3.10', 'test -py 3.11', 'test -py 3.12']
+
 
     steps:
     - uses: actions/checkout@v4
@@ -21,7 +25,7 @@ jobs:
       uses: pypa/hatch@install
     - name: Run tests
       run: |
-          hatch test --all
+          hatch ${{ matrix.hatch-command }}
           hatch run lint:lint-check
           hatch run lint:format-check
           hatch run types:check
