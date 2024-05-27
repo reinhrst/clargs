@@ -3,7 +3,7 @@ name: Upload to PyPI and Tag
 on:
   push:
     branches:
-      - "hatch"
+      - "main"
     paths:
       - 'src/clargs/__about__.py'
   workflow_dispatch: {}
