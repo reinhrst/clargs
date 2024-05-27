@@ -56,6 +56,7 @@ usage: 3_list.py [-h] [--shout | --no-shout | -s]
 3_list.py: error: argument singular: invalid choice: 'Alien' (choose from 'Human', 'Horse', 'Sheep')
 
 """
+
 import argparse
 import clargs
 import typing as t

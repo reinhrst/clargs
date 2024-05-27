@@ -12,6 +12,7 @@ usage: 6_validation.py [-h] number
 6_validation.py: error: argument number: invalid int-validation value: '1'
 
 """
+
 import clargs
 import typing as t
 
@@ -22,7 +23,7 @@ def print_even_number(
         clargs.extra_info(
             validate=lambda n: n % 2 == 0,
         ),
-    ]
+    ],
 ):
     """
     Prints a number

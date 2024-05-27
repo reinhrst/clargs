@@ -25,8 +25,8 @@ function processfile() {
         COMMENT="$(echo ${line} | sed -E "s/$CMDLINE/\2/")"
         RETURNCODE="$(echo ${line} | sed -E "s/$CMDLINE/\3/")"
         echo ">>> python $FILENAME $ARGUMENTS$COMMENT(returncode: $RETURNCODE)" >> "$TARGETFILE"
-        python $FILENAME $ARGUMENTS 2>> $TARGETFILE >> "$TARGETFILE"
-        if [[ $? == $RETURNCODE ]]; then
+        python $FILENAME $ARGUMENTS 2>&1 | sed -E 's/at 0x[0-9a-f]+>/at 0xXXXXXXXXX>/' >> "$TARGETFILE"
+        if [[ ${PIPESTATUS[0]} == $RETURNCODE ]]; then
             echo >> $TARGETFILE
         else
             cat "$TARGETFILE"

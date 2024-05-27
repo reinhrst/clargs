@@ -1,6 +1,5 @@
 import re
 import textwrap
-import inspect
 import dataclasses
 import typing as t
 

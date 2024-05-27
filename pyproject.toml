@@ -38,8 +38,19 @@ path = "src/clargs/__about__.py"
 extra-dependencies = [
   "mypy>=1.0.0",
 ]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/clargs tests}"
+scripts.check = "mypy --install-types --non-interactive {args:src/clargs tests}"
+
+[tool.hatch.envs.lint]
+extra-dependencies = [
+  "ruff>=0.4.5",
+]
+scripts.lint-check = "ruff check --diff"
+scripts.format-check = "ruff format --diff"
+scripts.lint-fix = "ruff check --fix"
+scripts.format-fix = "ruff format"
+
+[tool.hatch.envs.examples]
+scripts.generate = "./examples/__generate_example_output__.sh examples/"
 
 [tool.coverage.run]
 source_pkgs = ["clargs", "tests"]

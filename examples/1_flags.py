@@ -51,6 +51,7 @@ usage: 1_flags.py [-h] [--shout | --no-shout | -s] singular plural [maxitems]
 1_flags.py: error: argument --shout/--no-shout/-s: ignored explicit argument 'yes'
 
 """
+
 import clargs
 
 

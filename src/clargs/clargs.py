@@ -60,17 +60,21 @@ class Settings:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AddArgumentParameters(t.Generic[T]):
-    action: t.Literal[
-        "store",
-        "store_const",
-        "store_true",
-        "store_false",
-        "append",
-        "append_const",
-        "count",
-        "help",
-        "version",
-    ] | t.Callable | NOT_SET_TYPE = NOT_SET
+    action: (
+        t.Literal[
+            "store",
+            "store_const",
+            "store_true",
+            "store_false",
+            "append",
+            "append_const",
+            "count",
+            "help",
+            "version",
+        ]
+        | t.Callable
+        | NOT_SET_TYPE
+    ) = NOT_SET
     choices: t.Container[str] | NOT_SET_TYPE = NOT_SET
     const: T | NOT_SET_TYPE = NOT_SET
     default: T | NOT_SET_TYPE = NOT_SET
