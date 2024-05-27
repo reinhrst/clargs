@@ -1,6 +1,6 @@
 import clargs
 import typing as t
-from test_simple import Base
+from .test_simple import Base
 
 
 class TestValidationCases(Base):

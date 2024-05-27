@@ -1,8 +1,11 @@
-# Clargs
+# clargs
 
+[![PyPI - Version](https://img.shields.io/pypi/v/clargs.svg)](https://pypi.org/project/clargs)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/clargs.svg)](https://pypi.org/project/clargs)
 ![Tests](https://github.com/reinhrst/clargs/workflows/Run%20package%20tests/badge.svg)
+-----
 
-The goal of the `clargs` package is to create commandline interfaces from function signatures.
+The goal of the `clargs` package is to create command-line interfaces from function signatures.
 
 - **Hit the ground running**: With a single line, an existing function is turned into a command line program
 - **Extensible**: It is flexible enough to do everything that `argparse` does, and keeps you in control
@@ -211,3 +214,7 @@ The reasons that I developed `clargs` is because I could not find any solution t
 [4]: https://github.com/reinhrst/clargs/tree/main/examples/4_parse_groups.py
 [5]: https://github.com/reinhrst/clargs/tree/main/examples/5_logging.py
 [6]: https://github.com/reinhrst/clargs/tree/main/examples/6_validation.py
+
+## License
+
+`clargs` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
