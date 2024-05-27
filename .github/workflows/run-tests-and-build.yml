@@ -10,40 +10,19 @@ on:
   workflow_call: {}
 
 jobs:
-  get-python-versions:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{steps.get-versions.outputs.matrix}}
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.12.2
-    - name: Install Hatch
-      uses: pypa/hatch@install
-    - name: get-versions
-      id: get-versions
-      run: |
-        echo "matrix=$(hatch run get-python-versions:get-python-versions)"
-        echo "matrix=$(hatch run get-python-versions:get-python-versions)" >> "$GITHUB_OUTPUT"
-  test:
-    runs-on: ubuntu-latest
-    needs: get-python-versions
-    strategy:
-      matrix:
-        python-version: ${{fromJson(needs.get-python-versions.outputs.matrix)}}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.12
     - name: Install Hatch
       uses: pypa/hatch@install
     - name: Run tests
       run: |
-          hatch test
+          hatch test --all
           hatch run lint:lint-check
           hatch run lint:format-check
           hatch run types:check
