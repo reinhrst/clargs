@@ -1,0 +1,28 @@
+name: Run package tests
+
+on:
+  push:
+    branches:
+      - "**"  # all branches
+  pull_request:
+    branches:
+      - "**"
+  workflow_call: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+    - name: Install Hatch
+      uses: pypa/hatch@install
+    - name: Run tests
+      run: |
+          hatch test --all
+          hatch run lint:lint-check
+          hatch run lint:format-check
+          hatch run types:check
+          hatch run examples:check

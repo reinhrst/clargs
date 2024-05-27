@@ -50,7 +50,8 @@ scripts.lint-fix = "ruff check --fix"
 scripts.format-fix = "ruff format"
 
 [tool.hatch.envs.examples]
-scripts.generate = "./examples/__generate_example_output__.sh examples/"
+scripts.check = "./examples/__generate_example_output__.sh examples/ --check"
+scripts.generate = "./examples/__generate_example_output__.sh examples/ --overwrite"
 
 [tool.coverage.run]
 source_pkgs = ["clargs", "tests"]

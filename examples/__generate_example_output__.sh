@@ -38,11 +38,34 @@ function processfile() {
     LINES_IN_FILE=$(wc -l < "$FILENAME" | bc)
     tail -n $((LINES_IN_FILE - ${LINES[1]})) "$FILENAME">> "$TARGETFILE"
     echo "done $FILENAME"
-    cp "$TARGETFILE" "$FILENAME"
 }
 
+case "$2" in
+  --check)
+    ACTION=check
+    ;;
+  --overwrite)
+    ACTION=overwrite
+    ;;
+  "")
+    ACTION=none
+    ;;
+  *)
+    echo "Illegal action $2" > /dev/stderr
+    exit 1
+    ;;
+esac
 
 shopt -s nullglob
 for file in $1*.py; do
     processfile "$file" || (echo "BREAK!!" && exit 1) || exit 1
 done
+
+case "$ACTION" in
+  check)
+    diff --exclude __generate_example_output__.sh "$TMPDIR" "$1" && echo "Files are up to date"
+    ;;
+  overwrite)
+    cp "$TMPDIR"/*.py "$1"
+    ;;
+esac
