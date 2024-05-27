@@ -1,0 +1,31 @@
+name: Upload to PyPi
+
+on:
+  push:
+    branches:
+      - "hatch"
+    paths:
+      - 'src/clargs/__about__.py'
+  workflow_dispatch: {}
+
+
+jobs:
+  test-and-build:
+    uses: ./.github/workflows/run-tests-and-build.yml
+
+  upload:
+    needs: test-and-build
+    name: Upload release to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/clargs
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: distribution-package
+        path: dist
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
