@@ -14,7 +14,6 @@ authors = [
   { name = "Claude", email = "pypi@claude.nl" },
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
