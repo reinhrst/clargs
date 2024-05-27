@@ -34,6 +34,12 @@ Source = "https://github.com/reinhrst/clargs"
 [tool.hatch.version]
 path = "src/clargs/__about__.py"
 
+[tool.hatch.envs.get-python-versions]
+python = "3.12"
+scripts.get-python-versions = """
+python -c 'import tomllib;import json;import pathlib;print(json.dumps(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["tool"]["hatch"]["envs"]["hatch-test"]["matrix"][0]["python"]), end="")'
+"""
+
 [tool.hatch.envs.types]
 extra-dependencies = [
   "mypy>=1.0.0",
