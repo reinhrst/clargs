@@ -48,3 +48,22 @@ jobs:
           hatch run lint:format-check
           hatch run types:check
           hatch run examples:check
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+    - name: Install Hatch
+      uses: pypa/hatch@install
+    - name: Build
+      run: hatch build
+    - name: Save distribution package
+      uses: actions/upload-artifact@v4
+      with:
+        name: distribution-package
+        path: |
+            dist
