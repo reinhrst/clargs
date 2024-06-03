@@ -205,7 +205,7 @@ class Clargs:
 
     def add_to_parser(self, parser: argparse.ArgumentParser, func: t.Callable) -> None:
         parser.set_defaults(_clargs_func_=func)
-        signature = inspect.signature(func)
+        signature = inspect.signature(func, eval_str=True)
         docstring = inspect.getdoc(func) or ""
         paramdescriptions = {
             p.name: p.description
